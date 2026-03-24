@@ -4,38 +4,28 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
 <title>AR Menü</title>
-
-<!-- A-Frame önce, MindAR sonra -->
 <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
-
 <style>
 * { margin: 0; padding: 0; box-sizing: border-box; }
 html, body { width: 100%; height: 100%; overflow: hidden; background: #000; }
 
-/* Kamera video her zaman arkada */
 video {
-  position: fixed !important;
-  top: 0 !important; left: 0 !important;
+  position: fixed !important; top: 0 !important; left: 0 !important;
   width: 100% !important; height: 100% !important;
-  object-fit: cover !important;
-  z-index: 0 !important;
+  object-fit: cover !important; z-index: 0 !important;
 }
 canvas.a-canvas {
-  position: fixed !important;
-  top: 0 !important; left: 0 !important;
+  position: fixed !important; top: 0 !important; left: 0 !important;
   width: 100% !important; height: 100% !important;
-  z-index: 1 !important;
-  background: transparent !important;
+  z-index: 1 !important; background: transparent !important;
 }
 a-scene {
-  position: fixed !important;
-  top: 0 !important; left: 0 !important;
-  width: 100% !important; height: 100% !important;
-  z-index: 1 !important;
+  position: fixed !important; top: 0 !important; left: 0 !important;
+  width: 100% !important; height: 100% !important; z-index: 1 !important;
 }
 
-/* SPLASH */
+/* ── SPLASH ── */
 #splash {
   position: fixed; inset: 0; z-index: 999;
   background: #0d0b08;
@@ -46,89 +36,76 @@ a-scene {
   font-family: -apple-system, sans-serif;
 }
 #splash.hide { opacity: 0; pointer-events: none; }
-
 .logo { font-size: 30px; font-weight: 700; color: #f5ede0; letter-spacing: 2px; margin-bottom: 6px; }
 .logo span { color: #c8933a; }
-.tagline { font-size: 12px; color: #666; margin-bottom: 44px; letter-spacing: 1px; }
-
-.pizza-emoji {
-  font-size: 78px; display: block; margin-bottom: 28px;
-  animation: float 3s ease-in-out infinite;
-}
+.tagline { font-size: 12px; color: #666; margin-bottom: 40px; letter-spacing: 1px; }
+.pizza-emoji { font-size: 72px; display: block; margin-bottom: 28px; animation: float 3s ease-in-out infinite; }
 @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
-
-.steps {
-  list-style: none; width: 100%; max-width: 300px;
-  margin-bottom: 32px; display: flex; flex-direction: column; gap: 10px;
-}
-.steps li {
-  background: rgba(255,255,255,0.05);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 12px; padding: 12px 16px;
-  font-size: 13px; color: #ccc;
-  display: flex; align-items: center; gap: 12px;
-}
-.steps li .n {
-  width: 22px; height: 22px; border-radius: 50%;
-  background: #c8933a; color: #000;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 11px; font-weight: 700; flex-shrink: 0;
-}
-
-/* Buton başta disabled - sahne yüklenince aktif olur */
-#startBtn {
-  width: 100%; max-width: 300px;
-  background: #555; color: #999;
-  border: none; border-radius: 50px;
-  padding: 16px; font-size: 16px; font-weight: 700;
-  cursor: default; transition: background 0.3s, color 0.3s;
-  font-family: -apple-system, sans-serif;
-}
-#startBtn.ready {
-  background: #c8933a; color: #000; cursor: pointer;
-}
-
-.loading-label {
-  margin-top: 12px; font-size: 12px; color: #555;
-  font-family: -apple-system, sans-serif;
-}
+.steps { list-style: none; width: 100%; max-width: 300px; margin-bottom: 32px; display: flex; flex-direction: column; gap: 10px; }
+.steps li { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 12px 16px; font-size: 13px; color: #ccc; display: flex; align-items: center; gap: 12px; }
+.steps li .n { width: 22px; height: 22px; border-radius: 50%; background: #c8933a; color: #000; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+#startBtn { width: 100%; max-width: 300px; background: #555; color: #999; border: none; border-radius: 50px; padding: 16px; font-size: 16px; font-weight: 700; cursor: default; transition: background 0.3s, color 0.3s; font-family: -apple-system, sans-serif; }
+#startBtn.ready { background: #c8933a; color: #000; cursor: pointer; }
+.loading-label { margin-top: 12px; font-size: 12px; color: #555; font-family: -apple-system, sans-serif; }
 .dot { animation: blink 1.2s ease-in-out infinite; }
-.dot:nth-child(2) { animation-delay: 0.2s; }
-.dot:nth-child(3) { animation-delay: 0.4s; }
+.dot:nth-child(2){animation-delay:0.2s} .dot:nth-child(3){animation-delay:0.4s}
 @keyframes blink { 0%,80%,100%{opacity:0.2} 40%{opacity:1} }
 
-/* HUD */
-#hud {
-  position: fixed; top: 0; left: 0; right: 0;
-  z-index: 100; display: none;
-  justify-content: space-between; align-items: center;
-  padding: 52px 20px 16px;
-  background: linear-gradient(to bottom, rgba(0,0,0,0.55), transparent);
-  font-family: -apple-system, sans-serif;
-}
+/* ── HUD ── */
+#hud { position: fixed; top: 0; left: 0; right: 0; z-index: 100; display: none; justify-content: space-between; align-items: center; padding: 52px 20px 16px; background: linear-gradient(to bottom, rgba(0,0,0,0.55), transparent); font-family: -apple-system, sans-serif; }
 #hud.show { display: flex; }
 #hud .brand { font-size: 18px; font-weight: 700; color: #fff; }
 #hud .brand span { color: #c8933a; }
-#hud .hint {
-  font-size: 12px; color: rgba(255,255,255,0.85);
-  background: rgba(0,0,0,0.45); border-radius: 20px; padding: 6px 14px;
-}
+#hud .hint { font-size: 12px; color: rgba(255,255,255,0.85); background: rgba(0,0,0,0.45); border-radius: 20px; padding: 6px 14px; }
 
-/* Scan prompt */
-#scanPrompt {
-  position: fixed; bottom: 60px;
-  left: 50%; transform: translateX(-50%);
-  z-index: 100; display: none;
-  background: rgba(0,0,0,0.75);
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 16px; padding: 14px 28px;
-  color: #fff; font-size: 14px;
-  white-space: nowrap;
-  font-family: -apple-system, sans-serif;
-  animation: pulse 2s ease-in-out infinite;
-}
+/* ── SCAN PROMPT ── */
+#scanPrompt { position: fixed; bottom: 140px; left: 50%; transform: translateX(-50%); z-index: 100; display: none; background: rgba(0,0,0,0.75); border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 14px 28px; color: #fff; font-size: 14px; white-space: nowrap; font-family: -apple-system, sans-serif; animation: pulse 2s ease-in-out infinite; }
 #scanPrompt.show { display: block; }
 @keyframes pulse { 0%,100%{opacity:0.7} 50%{opacity:1} }
+
+/* ── NAVIGATION BAR ── */
+#navBar {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  z-index: 100; display: none;
+  flex-direction: column; align-items: center;
+  padding: 0 0 32px;
+  background: linear-gradient(to top, rgba(0,0,0,0.8) 60%, transparent);
+  font-family: -apple-system, sans-serif;
+}
+#navBar.show { display: flex; }
+
+/* Ürün adı + fiyat */
+.product-info {
+  text-align: center; margin-bottom: 16px;
+  animation: fadeIn 0.3s ease;
+}
+@keyframes fadeIn { from{opacity:0;transform:translateY(6px)} to{opacity:1;transform:translateY(0)} }
+.product-name { font-size: 20px; font-weight: 700; color: #f5ede0; letter-spacing: 0.3px; }
+.product-price { font-size: 18px; color: #c8933a; font-weight: 700; margin-top: 2px; }
+
+/* Dot indicators */
+.dots { display: flex; gap: 8px; margin-bottom: 16px; }
+.dot-ind { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,0.3); transition: background 0.3s, transform 0.3s; }
+.dot-ind.active { background: #c8933a; transform: scale(1.3); }
+
+/* Prev / Next butonları */
+.nav-buttons { display: flex; gap: 16px; align-items: center; }
+.nav-btn {
+  width: 56px; height: 56px; border-radius: 50%;
+  background: rgba(255,255,255,0.1);
+  border: 1.5px solid rgba(255,255,255,0.2);
+  color: #fff; font-size: 22px;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.2s, transform 0.15s;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+}
+.nav-btn:active { background: rgba(200,147,58,0.3); transform: scale(0.93); }
+.nav-btn.center {
+  width: 68px; height: 68px; font-size: 14px; font-weight: 700;
+  background: #c8933a; border-color: #c8933a; color: #000;
+  letter-spacing: 0.5px;
+}
 </style>
 </head>
 <body>
@@ -141,7 +118,7 @@ a-scene {
   <ul class="steps">
     <li><span class="n">1</span> Kamera iznine izin ver</li>
     <li><span class="n">2</span> Menü kapağına doğrult</li>
-    <li><span class="n">3</span> 3D yemek masanda belirir</li>
+    <li><span class="n">3</span> Ürünler arasında geçiş yap</li>
   </ul>
   <button id="startBtn" disabled>Yükleniyor<span class="dot">.</span><span class="dot">.</span><span class="dot">.</span></button>
   <div class="loading-label" id="loadingLabel">AR motoru hazırlanıyor</div>
@@ -156,59 +133,104 @@ a-scene {
 <!-- Scan prompt -->
 <div id="scanPrompt">🔍 Menü kapağını kameraya göster</div>
 
-<!-- A-FRAME — autoStart:false, arka planda yüklensin -->
+<!-- NAVIGATION BAR -->
+<div id="navBar">
+  <div class="product-info">
+    <div class="product-name" id="productName">Brokoli Pizza</div>
+    <div class="product-price" id="productPrice">₺289</div>
+  </div>
+  <div class="dots" id="dots"></div>
+  <div class="nav-buttons">
+    <button class="nav-btn" id="prevBtn">←</button>
+    <button class="nav-btn center" id="menuBtn">MENÜ</button>
+    <button class="nav-btn" id="nextBtn">→</button>
+  </div>
+</div>
+
+<!-- A-FRAME SCENE -->
 <a-scene
   id="arScene"
-  mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/examples/image-tracking/assets/card-example/card.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no;"
+  mindar-image="imageTargetSrc: https://farfromuk.github.io/sofra-ar/targets.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no;"
   renderer="colorManagement: true; alpha: true;"
   embedded
   vr-mode-ui="enabled: false"
   device-orientation-permission-ui="enabled: false"
 >
   <a-assets>
-    <a-asset-item id="pizzaModel" src="https://farfromuk.github.io/sofra-ar/pizza.glb"></a-asset-item>
+    <!-- Ürün 1 — Brokoli Pizza (mevcut) -->
+    <a-asset-item id="model0" src="https://farfromuk.github.io/sofra-ar/pizza.glb"></a-asset-item>
+    <!-- Ürün 2 — Burger (GLB yüklenince src değiştirilecek) -->
+    <a-asset-item id="model1" src="https://farfromuk.github.io/sofra-ar/burger.glb"></a-asset-item>
+    <!-- Ürün 3 — Sushi / diğer ürün -->
+    <a-asset-item id="model2" src="https://farfromuk.github.io/sofra-ar/sushi.glb"></a-asset-item>
   </a-assets>
 
   <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
   <a-light type="ambient"     color="#ffffff" intensity="1.0"></a-light>
   <a-light type="directional" color="#ffffff" intensity="1.2" position="1 2 1"></a-light>
-  <a-light type="directional" color="#ffe8cc" intensity="0.6" position="-1 1 -1"></a-light>
+  <a-light type="directional" color="#ffe8cc" intensity="0.5" position="-1 1 -1"></a-light>
 
   <a-entity mindar-image-target="targetIndex: 0">
 
-    <!-- Gerçek GLB model -->
-    <a-entity
-      gltf-model="#pizzaModel"
-      position="0 0.05 0"
-      scale="0.4 0.4 0.4"
-      rotation="-90 0 0"
-      animation="property: rotation; to: -90 360 0; loop: true; dur: 10000; easing: linear">
+    <!-- ÜRÜN 0 — Brokoli Pizza -->
+    <a-entity id="product0" visible="true">
+      <a-entity
+        gltf-model="#model0"
+        position="0 0.05 0" scale="0.5 0.5 0.5" rotation="0 0 0"
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear">
+      </a-entity>
+      <!-- Buhar -->
+      <a-sphere position=" 0.03 0.18 0" radius="0.02" color="#fff" opacity="0.2"
+        animation="property: position; from: 0.03 0.18 0; to: 0.05 0.45 0; loop: true; dur: 2000; easing: easeInSine"
+        animation__op="property: opacity; from: 0.2; to: 0; loop: true; dur: 2000"></a-sphere>
     </a-entity>
 
-    <!-- Fiyat etiketi -->
-    <a-entity position="0 0.55 0"
-      animation="property: position; to: 0 0.62 0; loop: true; dur: 2000; dir: alternate; easing: easeInOutSine">
-      <a-plane width="0.67" height="0.28" color="#c8933a" opacity="0.5" position="0 0 -0.002"></a-plane>
-      <a-plane width="0.65" height="0.26" color="#0d0b08" opacity="0.92" position="0 0 -0.001"></a-plane>
-      <a-text value="Brokoli Pizza" align="center" color="#f5ede0" width="1.4"
-        font="https://cdn.aframe.io/fonts/Exo2Bold.fnt" position="0 0.05 0.001"></a-text>
-      <a-text value="299 TL" align="center" color="#c8933a" width="1.8"
-        font="https://cdn.aframe.io/fonts/Exo2Bold.fnt" position="0 -0.05 0.001"></a-text>
+    <!-- ÜRÜN 1 — Burger -->
+    <a-entity id="product1" visible="false">
+      <a-entity
+        gltf-model="#model1"
+        position="0 0.05 0" scale="0.5 0.5 0.5" rotation="0 0 0"
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear">
+      </a-entity>
+      <a-sphere position="-0.03 0.18 0" radius="0.018" color="#fff" opacity="0.2"
+        animation="property: position; from: -0.03 0.18 0; to: -0.05 0.44 0; loop: true; dur: 2200; delay: 300; easing: easeInSine"
+        animation__op="property: opacity; from: 0.2; to: 0; loop: true; dur: 2200; delay: 300"></a-sphere>
     </a-entity>
 
-    <!-- Buhar -->
-    <a-sphere position=" 0.03 0.18 0" radius="0.020" color="#fff" opacity="0.20"
-      animation    ="property: position; from:  0.03 0.18 0; to:  0.05 0.45 0; loop: true; dur: 2000; easing: easeInSine"
-      animation__op="property: opacity;  from: 0.20; to: 0; loop: true; dur: 2000"></a-sphere>
-    <a-sphere position="-0.04 0.18 0" radius="0.016" color="#fff" opacity="0.18"
-      animation    ="property: position; from: -0.04 0.18 0; to: -0.07 0.42 0; loop: true; dur: 2600; delay: 700; easing: easeInSine"
-      animation__op="property: opacity;  from: 0.18; to: 0; loop: true; dur: 2600; delay: 700"></a-sphere>
+    <!-- ÜRÜN 2 — Sushi -->
+    <a-entity id="product2" visible="false">
+      <a-entity
+        gltf-model="#model2"
+        position="0 0.05 0" scale="0.5 0.5 0.5" rotation="0 0 0"
+        animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear">
+      </a-entity>
+    </a-entity>
+
+    <!-- Fiyat etiketi (ortak, JS ile güncellenir) -->
+    <a-entity id="priceTag" position="0 0.62 0" visible="false"
+      animation="property: position; to: 0 0.68 0; loop: true; dur: 2000; dir: alternate; easing: easeInOutSine">
+      <a-plane width="0.72" height="0.30" color="#c8933a" opacity="0.45" position="0 0 -0.002"></a-plane>
+      <a-plane width="0.70" height="0.28" color="#0d0b08" opacity="0.92" position="0 0 -0.001"></a-plane>
+      <a-text id="tagName"  value="Brokoli Pizza" align="center" color="#f5ede0" width="1.5" font="https://cdn.aframe.io/fonts/Exo2Bold.fnt" position="0  0.06 0.001"></a-text>
+      <a-text id="tagPrice" value="₺289"          align="center" color="#c8933a" width="1.9" font="https://cdn.aframe.io/fonts/Exo2Bold.fnt" position="0 -0.05 0.001"></a-text>
+    </a-entity>
 
   </a-entity>
 </a-scene>
 
 <script>
 (function () {
+
+  // ── ÜRÜN LİSTESİ ──────────────────────────────────────────
+  const PRODUCTS = [
+    { id: 'product0', name: 'Brokoli Pizza',    price: '₺289' },
+    { id: 'product1', name: 'Pepperoni Pizza',  price: '₺319' },
+    { id: 'product2', name: 'Margarita Pizza',  price: '₺269' },
+  ];
+  let current = 0;
+  let targetVisible = false;
+
+  // ── DOM REFS ───────────────────────────────────────────────
   const arScene    = document.getElementById('arScene');
   const splash     = document.getElementById('splash');
   const startBtn   = document.getElementById('startBtn');
@@ -216,29 +238,82 @@ a-scene {
   const hud        = document.getElementById('hud');
   const hudHint    = document.getElementById('hudHint');
   const scanPrompt = document.getElementById('scanPrompt');
+  const navBar     = document.getElementById('navBar');
+  const productName  = document.getElementById('productName');
+  const productPrice = document.getElementById('productPrice');
+  const dotsEl       = document.getElementById('dots');
+  const prevBtn      = document.getElementById('prevBtn');
+  const nextBtn      = document.getElementById('nextBtn');
+  const priceTag     = document.getElementById('priceTag');
 
-  // Sahne yüklenince butonu aktif et
+  // ── DOTS oluştur ───────────────────────────────────────────
+  PRODUCTS.forEach((_, i) => {
+    const d = document.createElement('div');
+    d.className = 'dot-ind' + (i === 0 ? ' active' : '');
+    d.dataset.i = i;
+    dotsEl.appendChild(d);
+  });
+
+  // ── ÜRÜN DEĞİŞTİR ─────────────────────────────────────────
+  function showProduct(idx) {
+    // Eski ürünü gizle
+    const old = document.getElementById(PRODUCTS[current].id);
+    if (old) old.setAttribute('visible', 'false');
+
+    current = (idx + PRODUCTS.length) % PRODUCTS.length;
+
+    // Yeni ürünü göster
+    const next = document.getElementById(PRODUCTS[current].id);
+    if (next) next.setAttribute('visible', 'true');
+
+    // UI güncelle
+    const p = PRODUCTS[current];
+    productName.textContent  = p.name;
+    productPrice.textContent = p.price;
+
+    // A-Frame text güncelle
+    const tagName  = document.getElementById('tagName');
+    const tagPrice = document.getElementById('tagPrice');
+    if (tagName)  tagName.setAttribute('value',  p.name);
+    if (tagPrice) tagPrice.setAttribute('value', p.price);
+
+    // Dots güncelle
+    document.querySelectorAll('.dot-ind').forEach((d, i) => {
+      d.classList.toggle('active', i === current);
+    });
+
+    // product-info animasyon yenile
+    productName.parentElement.style.animation = 'none';
+    void productName.parentElement.offsetWidth;
+    productName.parentElement.style.animation = 'fadeIn 0.3s ease';
+  }
+
+  // ── NAV BUTONLAR ───────────────────────────────────────────
+  prevBtn.addEventListener('click', () => showProduct(current - 1));
+  nextBtn.addEventListener('click', () => showProduct(current + 1));
+
+  // Swipe desteği
+  let touchStartX = 0;
+  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
+  document.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - touchStartX;
+    if (Math.abs(dx) > 50) dx < 0 ? showProduct(current + 1) : showProduct(current - 1);
+  });
+
+  // ── SAHNE YÜKLEME ──────────────────────────────────────────
   const onLoaded = () => {
     startBtn.disabled = false;
     startBtn.classList.add('ready');
     startBtn.innerHTML = '📷 Kamerayı Aç';
     loadLabel.style.display = 'none';
   };
+  if (arScene.hasLoaded) { onLoaded(); }
+  else { arScene.addEventListener('loaded', onLoaded, { once: true }); }
 
-  if (arScene.hasLoaded) {
-    onLoaded();
-  } else {
-    arScene.addEventListener('loaded', onLoaded, { once: true });
-  }
-
-  // KRITIK: tıklama handler'ı senkron — iOS getUserMedia direkt tetiklenmeli
+  // ── START BUTONU ───────────────────────────────────────────
   startBtn.addEventListener('click', function () {
     if (!startBtn.classList.contains('ready')) return;
-
-    // Splash kapat
     splash.classList.add('hide');
-
-    // Sistemi DOĞRUDAN başlat — async yok, timeout yok
     const sys = arScene.systems['mindar-image-system'];
     if (sys) {
       sys.start();
@@ -247,15 +322,23 @@ a-scene {
     }
   });
 
+  // ── TARGET FOUND/LOST ──────────────────────────────────────
   arScene.addEventListener('targetFound', () => {
+    targetVisible = true;
     scanPrompt.classList.remove('show');
-    hudHint.textContent = '✅ Yemek hazır!';
+    navBar.classList.add('show');
+    priceTag.setAttribute('visible', 'true');
+    hudHint.textContent = '✅ ' + PRODUCTS[current].name;
   });
 
   arScene.addEventListener('targetLost', () => {
+    targetVisible = false;
     scanPrompt.classList.add('show');
+    navBar.classList.remove('show');
+    priceTag.setAttribute('visible', 'false');
     hudHint.textContent = '📸 Menüye doğrult';
   });
+
 })();
 </script>
 </body>
