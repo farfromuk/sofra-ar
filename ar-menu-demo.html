@@ -159,65 +159,49 @@ a-scene {
 <!-- A-FRAME — autoStart:false, arka planda yüklensin -->
 <a-scene
   id="arScene"
-  mindar-image="imageTargetSrc: https://farfromuk.github.io/sofra-ar/targets.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no;"
+  mindar-image="imageTargetSrc: https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.1.4/examples/image-tracking/assets/card-example/card.mind; autoStart: false; uiLoading: no; uiError: no; uiScanning: no;"
   renderer="colorManagement: true; alpha: true;"
   embedded
   vr-mode-ui="enabled: false"
   device-orientation-permission-ui="enabled: false"
 >
-  <a-assets></a-assets>
+  <a-assets>
+    <a-asset-item id="pizzaModel" src="https://farfromuk.github.io/sofra-ar/pizza.glb"></a-asset-item>
+  </a-assets>
+
   <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-  <a-light type="ambient"     color="#ffffff" intensity="0.8"></a-light>
-  <a-light type="directional" color="#ffe8cc" intensity="1.0" position="1 2 1"></a-light>
+  <a-light type="ambient"     color="#ffffff" intensity="1.0"></a-light>
+  <a-light type="directional" color="#ffffff" intensity="1.2" position="1 2 1"></a-light>
+  <a-light type="directional" color="#ffe8cc" intensity="0.6" position="-1 1 -1"></a-light>
 
   <a-entity mindar-image-target="targetIndex: 0">
 
-    <!-- Tepsi -->
-    <a-cylinder position="0 0 0" radius="0.42" height="0.018" color="#8B5E3C"></a-cylinder>
-
-    <!-- Pizza - dönen grup -->
-    <a-entity position="0 0.02 0"
-      animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear">
-
-      <a-cylinder position="0 0 0"     radius="0.38" height="0.030" color="#C8844A"></a-cylinder>
-      <a-torus    position="0 0.018 0" radius="0.365" tube="0.022" color="#D4955B" segments-tube="8"></a-torus>
-      <a-cylinder position="0 0.020 0" radius="0.31" height="0.007" color="#C0392B"></a-cylinder>
-      <a-cylinder position="0 0.025 0" radius="0.27" height="0.006" color="#F0D060"></a-cylinder>
-
-      <a-cylinder position=" 0.12  0.033  0.00" radius="0.050" height="0.008" color="#8B0000"></a-cylinder>
-      <a-cylinder position="-0.15  0.033  0.07" radius="0.045" height="0.008" color="#8B0000"></a-cylinder>
-      <a-cylinder position=" 0.05  0.033 -0.19" radius="0.045" height="0.008" color="#8B0000"></a-cylinder>
-      <a-cylinder position="-0.04  0.033  0.21" radius="0.040" height="0.008" color="#8B0000"></a-cylinder>
-      <a-cylinder position=" 0.21  0.033  0.07" radius="0.040" height="0.008" color="#8B0000"></a-cylinder>
-
-      <a-torus position=" 0.17  0.036 -0.09" radius="0.028" tube="0.011" color="#1a1a1a" segments-tube="6"></a-torus>
-      <a-torus position="-0.09  0.036 -0.16" radius="0.026" tube="0.010" color="#1a1a1a" segments-tube="6"></a-torus>
-      <a-torus position=" 0.00  0.036  0.23" radius="0.028" tube="0.011" color="#1a1a1a" segments-tube="6"></a-torus>
-
-      <a-box position=" 0.07  0.036  0.15" width="0.070" height="0.005" depth="0.050" color="#27AE60" rotation="0  25 0"></a-box>
-      <a-box position="-0.13  0.036 -0.10" width="0.065" height="0.005" depth="0.045" color="#2ECC71" rotation="0 -40 0"></a-box>
-
-      <a-sphere position=" 0.13  0.040  0.14" radius="0.033" color="#E74C3C"></a-sphere>
-      <a-sphere position="-0.17  0.040  0.13" radius="0.030" color="#C0392B"></a-sphere>
+    <!-- Gerçek GLB model -->
+    <a-entity
+      gltf-model="#pizzaModel"
+      position="0 0.05 0"
+      scale="0.4 0.4 0.4"
+      rotation="-90 0 0"
+      animation="property: rotation; to: -90 360 0; loop: true; dur: 10000; easing: linear">
     </a-entity>
 
     <!-- Fiyat etiketi -->
-    <a-entity position="0 0.52 0"
-      animation="property: position; to: 0 0.58 0; loop: true; dur: 2000; dir: alternate; easing: easeInOutSine">
+    <a-entity position="0 0.55 0"
+      animation="property: position; to: 0 0.62 0; loop: true; dur: 2000; dir: alternate; easing: easeInOutSine">
       <a-plane width="0.67" height="0.28" color="#c8933a" opacity="0.5" position="0 0 -0.002"></a-plane>
       <a-plane width="0.65" height="0.26" color="#0d0b08" opacity="0.92" position="0 0 -0.001"></a-plane>
-      <a-text value="Italian Supreme" align="center" color="#f5ede0" width="1.4"
+      <a-text value="Brokoli Pizza" align="center" color="#f5ede0" width="1.4"
         font="https://cdn.aframe.io/fonts/Exo2Bold.fnt" position="0 0.05 0.001"></a-text>
       <a-text value="299 TL" align="center" color="#c8933a" width="1.8"
         font="https://cdn.aframe.io/fonts/Exo2Bold.fnt" position="0 -0.05 0.001"></a-text>
     </a-entity>
 
-    <!-- Buhar efekti -->
-    <a-sphere position=" 0.03 0.12 0" radius="0.020" color="#fff" opacity="0.20"
-      animation    ="property: position; from:  0.03 0.12 0; to:  0.05 0.40 0; loop: true; dur: 2000; easing: easeInSine"
+    <!-- Buhar -->
+    <a-sphere position=" 0.03 0.18 0" radius="0.020" color="#fff" opacity="0.20"
+      animation    ="property: position; from:  0.03 0.18 0; to:  0.05 0.45 0; loop: true; dur: 2000; easing: easeInSine"
       animation__op="property: opacity;  from: 0.20; to: 0; loop: true; dur: 2000"></a-sphere>
-    <a-sphere position="-0.04 0.12 0" radius="0.016" color="#fff" opacity="0.18"
-      animation    ="property: position; from: -0.04 0.12 0; to: -0.07 0.36 0; loop: true; dur: 2600; delay: 700; easing: easeInSine"
+    <a-sphere position="-0.04 0.18 0" radius="0.016" color="#fff" opacity="0.18"
+      animation    ="property: position; from: -0.04 0.18 0; to: -0.07 0.42 0; loop: true; dur: 2600; delay: 700; easing: easeInSine"
       animation__op="property: opacity;  from: 0.18; to: 0; loop: true; dur: 2600; delay: 700"></a-sphere>
 
   </a-entity>
