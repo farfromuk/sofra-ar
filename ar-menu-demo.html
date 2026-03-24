@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
+  <title>AR Menü — Demo</title>
+
+  <!-- MindAR + A-Frame -->
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500&display=swap');
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #0a0a0a; overflow: hidden; font-family: 'DM Sans', sans-serif; }
+
+    /* ── SPLASH SCREEN ─────────────────────────────────────── */
+    #splash {
+      position: fixed; inset: 0; z-index: 999;
+      background: linear-gradient(160deg, #0f0f0f 0%, #1a0a00 60%, #0f0f0f 100%);
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      gap: 0; padding: 32px;
+      transition: opacity 0.6s ease;
+    }
+    #splash.hide { opacity: 0; pointer-events: none; }
+
+    .splash-badge {
+      font-size: 11px; letter-spacing: 4px; text-transform: uppercase;
+      color: #c8833a; margin-bottom: 20px; font-weight: 500;
+    }
+
+    .splash-title {
+      font-family: 'Playfair Display', serif;
+      font-size: clamp(2.2rem, 8vw, 3.2rem);
+      color: #f5efe6;
+      text-align: center;
+      line-height: 1.15;
+      margin-bottom: 8px;
+    }
+    .splash-title span { color: #e07a2f; }
+
+    .splash-sub {
+      font-size: 14px; color: #888; text-align: center;
+      margin-bottom: 36px; max-width: 280px; line-height: 1.6;
+    }
+
+    /* Pizza icon animated */
+    .pizza-icon {
+      font-size: 72px;
+      margin-bottom: 28px;
+      display: inline-block;
+      animation: float 3s ease-in-out infinite;
+      filter: drop-shadow(0 8px 24px rgba(224,122,47,0.4));
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0) rotate(-3deg); }
+      50% { transform: translateY(-12px) rotate(3deg); }
+    }
+
+    .step-list {
+      list-style: none; display: flex; flex-direction: column; gap: 10px;
+      margin-bottom: 36px; width: 100%; max-width: 300px;
+    }
+    .step-list li {
+      display: flex; align-items: center; gap: 12px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 12px; padding: 12px 16px;
+      font-size: 13px; color: #ccc;
+    }
+    .step-list li .num {
+      width: 24px; height: 24px; border-radius: 50%;
+      background: #e07a2f; color: #fff;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; flex-shrink: 0;
+    }
+
+    #startBtn {
+      background: linear-gradient(135deg, #e07a2f, #c8530a);
+      color: #fff; border: none; border-radius: 50px;
+      padding: 16px 40px; font-size: 15px; font-weight: 600;
+      cursor: pointer; letter-spacing: 0.5px;
+      box-shadow: 0 8px 32px rgba(224,122,47,0.4);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    #startBtn:active { transform: scale(0.97); box-shadow: 0 4px 16px rgba(224,122,47,0.3); }
+
+    .disclaimer {
+      margin-top: 16px; font-size: 11px; color: #555; text-align: center;
+    }
+
+    /* ── AR HUD ──────────────────────────────────────────────── */
+    #hud {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      display: none; justify-content: space-between; align-items: center;
+      padding: 16px 20px;
+      background: linear-gradient(to bottom, rgba(0,0,0,0.5), transparent);
+    }
+    #hud.show { display: flex; }
+
+    .hud-logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 18px; color: white;
+    }
+    .hud-logo span { color: #e07a2f; }
+
+    .hud-hint {
+      font-size: 11px; color: rgba(255,255,255,0.6);
+      background: rgba(0,0,0,0.4); border-radius: 20px;
+      padding: 6px 12px; backdrop-filter: blur(8px);
+    }
+
+    /* ── TRACKING LOST BANNER ────────────────────────────────── */
+    #scanPrompt {
+      position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
+      z-index: 100; display: none;
+      background: rgba(0,0,0,0.7); backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.12); border-radius: 16px;
+      padding: 12px 24px; color: white; font-size: 13px; text-align: center;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    #scanPrompt.show { display: block; }
+    @keyframes pulse { 0%,100%{opacity:0.7} 50%{opacity:1} }
+  </style>
+</head>
+<body>
+
+<!-- ══ SPLASH ══════════════════════════════════════════════════ -->
+<div id="splash">
+  <div class="splash-badge">⚡ WebAR Menü Deneyimi</div>
+
+  <div class="pizza-icon">🍕</div>
+
+  <h1 class="splash-title">Yemeğin<br><span>Masanda Belirir</span></h1>
+  <p class="splash-sub">Kameranı menü kapağına doğrult, sipariş vermeden önce 3D olarak gör.</p>
+
+  <ul class="step-list">
+    <li><span class="num">1</span> Kamera izni ver</li>
+    <li><span class="num">2</span> Menü kapağını çerçeve içine al</li>
+    <li><span class="num">3</span> 3D yemek masanda belirir 🎉</li>
+  </ul>
+
+  <button id="startBtn">📷 Kamerayı Aç</button>
+  <p class="disclaimer">Uygulama indirme yok — tamamen tarayıcıda çalışır</p>
+</div>
+
+<!-- ══ AR HUD ═══════════════════════════════════════════════════ -->
+<div id="hud">
+  <div class="hud-logo">AR<span>Menü</span></div>
+  <div class="hud-hint">📸 Menüye doğrult</div>
+</div>
+
+<!-- ══ SCAN PROMPT ═══════════════════════════════════════════════ -->
+<div id="scanPrompt">🔍 Menü kapağını kameraya göster</div>
+
+<!-- ══ A-FRAME SCENE ════════════════════════════════════════════ -->
+<!--
+  ┌─────────────────────────────────────────────────────────────┐
+  │  KURULUM NOTU — TARGET IMAGE                                │
+  │  Bu demo MindAR'ın örnek kartını kullanır.                  │
+  │  Kendi restoranın için:                                     │
+  │  1. https://hiukim.github.io/mind-ar-js/ adresine git      │
+  │  2. "Image Target Compiler" aracını aç                     │
+  │  3. Menü kapağı fotoğrafını yükle → .mind dosyası indir    │
+  │  4. imageTargetSrc değerini kendi .mind dosyanla değiştir  │
+  └─────────────────────────────────────────────────────────────┘
+  
+  ┌─────────────────────────────────────────────────────────────┐
+  │  SKETCHFAB MODEL ENTEGRASYONU                               │
+  │  1. sketchfab.com → pizza/burger/sushi modeli bul          │
+  │  2. "Download" → glTF formatını seç                        │
+  │  3. GitHub Pages veya Netlify'a yükle                      │
+  │  4. Aşağıdaki <a-gltf-model> src'yi güncelle              │
+  │  5. A-Frame primitif pizzayı silebilirsin                  │
+  │                                                             │
+  │  Ücretsiz pizza model önerileri:                           │
+  │  • sketchfab.com/3d-models/pizza-... (free tag filtrele)   │
+  │  • sketchfab.com/3d-models/margherita-pizza-...            │
+  └─────────────────────────────────────────────────────────────┘
+-->
+
+<a-scene
+  mindar-image="
+    imageTargetSrc: https://cdn.jsdelivr.net/gh/hiukim/mind-ar-js@1.2.5/examples/image-tracking/assets/card-example/card.mind;
+    autoStart: false;
+    uiLoading: no;
+    uiError: no;
+    uiScanning: no;
+  "
+  color-space="sRGB"
+  renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true;"
+  vr-mode-ui="enabled: false"
+  device-orientation-permission-ui="enabled: false"
+  id="arScene"
+>
+  <a-assets>
+    <!-- 
+      SKETCHFAB MODEL BURAYA GELECEK:
+      <a-asset-item id="pizzaModel" src="https://yourdomain.com/models/pizza.glb"></a-asset-item>
+    -->
+  </a-assets>
+
+  <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+
+  <!-- ── AMBIENT + DIRECTIONAL LIGHTS ── -->
+  <a-light type="ambient" color="#fff" intensity="0.6"></a-light>
+  <a-light type="directional" position="1 2 1" color="#ffe8cc" intensity="1.2"></a-light>
+  <a-light type="point" position="0 1 0" color="#ff9944" intensity="0.8" distance="2"></a-light>
+
+  <!-- ════════════════════════════════════════════════════════════
+       IMAGE TARGET: 0
+       Tüm 3D içerik bu entity'nin altında
+  ════════════════════════════════════════════════════════════════ -->
+  <a-entity mindar-image-target="targetIndex: 0">
+
+    <!-- 
+      ──────────────────────────────────────
+      SEÇENEK A: SKETCHFAB glTF MODEL (tavsiye edilen)
+      Alttaki satırın yorumunu kaldır, Sketchfab modelini yükledikten sonra src'yi güncelle:
+      
+      <a-entity
+        gltf-model="#pizzaModel"
+        position="0 0.05 0"
+        scale="0.3 0.3 0.3"
+        rotation="-90 0 0"
+        animation="property: rotation; to: -90 360 0; loop: true; dur: 10000; easing: linear">
+      </a-entity>
+      ──────────────────────────────────────
+    -->
+
+    <!-- 
+      ──────────────────────────────────────
+      SEÇENEK B: A-FRAME PRİMİTİF PIZZA (şu an aktif — demo için)
+      Sketchfab modelin hazır olunca bu bloğu silebilirsin.
+      ──────────────────────────────────────
+    -->
+    
+    <!-- Ahşap tabak / tepsi -->
+    <a-cylinder position="0 0 0" radius="0.42" height="0.018"
+      color="#8B5E3C" 
+      shadow="cast: true; receive: true">
+      <!-- Tepsi kenar çizgisi -->
+      <a-cylinder position="0 0.01 0" radius="0.43" height="0.005" color="#6B3F1C" open-ended="true"></a-cylinder>
+    </a-cylinder>
+
+    <!-- Pizza — dönen ana grup -->
+    <a-entity position="0 0.02 0"
+      animation="property: rotation; to: 0 360 0; loop: true; dur: 12000; easing: linear">
+
+      <!-- Hamur (crust base) -->
+      <a-cylinder position="0 0 0" radius="0.38" height="0.035" color="#C8844A"></a-cylinder>
+      <!-- Hamur kenarı -->
+      <a-torus position="0 0.02 0" radius="0.365" tube="0.025" color="#D4955B" segments-tube="8"></a-torus>
+
+      <!-- Domates sos -->
+      <a-cylinder position="0 0.022 0" radius="0.32" height="0.008" color="#C0392B"></a-cylinder>
+
+      <!-- Peynir -->
+      <a-cylinder position="0 0.028 0" radius="0.28" height="0.006" color="#F0D060" opacity="0.95"></a-cylinder>
+
+      <!-- Pepperoni x6 -->
+      <a-cylinder position="0.12 0.036 0"  radius="0.055" height="0.009" color="#8B0000"></a-cylinder>
+      <a-cylinder position="-0.16 0.036 0.06" radius="0.05"  height="0.009" color="#8B0000"></a-cylinder>
+      <a-cylinder position="0.06 0.036 -0.2"  radius="0.05"  height="0.009" color="#8B0000"></a-cylinder>
+      <a-cylinder position="-0.05 0.036 0.22" radius="0.045" height="0.009" color="#8B0000"></a-cylinder>
+      <a-cylinder position="0.22 0.036 0.08"  radius="0.045" height="0.009" color="#8B0000"></a-cylinder>
+      <a-cylinder position="-0.2 0.036 -0.12" radius="0.05"  height="0.009" color="#8B0000"></a-cylinder>
+
+      <!-- Zeytin x4 -->
+      <a-torus position="0.18 0.038 -0.1"  radius="0.03" tube="0.012" color="#1a1a1a" segments-tube="6"></a-torus>
+      <a-torus position="-0.1 0.038 -0.17" radius="0.028" tube="0.011" color="#1a1a1a" segments-tube="6"></a-torus>
+      <a-torus position="0.0 0.038 0.25"  radius="0.03" tube="0.012" color="#1a1a1a" segments-tube="6"></a-torus>
+      <a-torus position="-0.22 0.038 0.1"  radius="0.028" tube="0.011" color="#1a1a1a" segments-tube="6"></a-torus>
+
+      <!-- Fesleğen yaprakları -->
+      <a-box position="0.08 0.038 0.16"  width="0.07" height="0.006" depth="0.05" color="#27AE60" rotation="0 25 0"></a-box>
+      <a-box position="-0.14 0.038 -0.1" width="0.065" height="0.006" depth="0.045" color="#2ECC71" rotation="0 -40 0"></a-box>
+      <a-box position="0.2 0.038 -0.04" width="0.06"  height="0.006" depth="0.04"  color="#27AE60" rotation="0 10 0"></a-box>
+
+      <!-- Cherry tomato x3 -->
+      <a-sphere position="0.14 0.042 0.15"  radius="0.035" color="#E74C3C"></a-sphere>
+      <a-sphere position="-0.18 0.042 0.14" radius="0.032" color="#C0392B"></a-sphere>
+      <a-sphere position="0.02 0.042 -0.22" radius="0.03"  color="#E74C3C"></a-sphere>
+
+    </a-entity>
+    <!-- /Pizza dönen grup -->
+
+    <!-- Fiyat etiketi — yukarıda yüzen -->
+    <a-entity position="0 0.55 0"
+      animation="property: position; to: 0 0.62 0; loop: true; dur: 2000; dir: alternate; easing: easeInOutSine">
+
+      <!-- Kart arka planı -->
+      <a-plane width="0.65" height="0.28" color="#12120f" opacity="0.92"
+        position="0 0 -0.001"></a-plane>
+      <!-- Kart border (altın) -->
+      <a-plane width="0.67" height="0.30" color="#c8833a" opacity="0.6"
+        position="0 0 -0.002"></a-plane>
+
+      <!-- Ürün adı -->
+      <a-text value="Italian Supreme"
+        align="center" color="#f5efe6" width="1.4"
+        font="https://cdn.aframe.io/fonts/Exo2Bold.fnt"
+        position="0 0.05 0.001">
+      </a-text>
+
+      <!-- Fiyat -->
+      <a-text value="₺299"
+        align="center" color="#e07a2f" width="1.8"
+        font="https://cdn.aframe.io/fonts/Exo2Bold.fnt"
+        position="0 -0.04 0.001">
+      </a-text>
+    </a-entity>
+
+    <!-- Buhar efekti 1 -->
+    <a-sphere position="0.04 0.14 0" radius="0.022" color="#ffffff" opacity="0.25"
+      animation="property: position; from: 0.04 0.14 0; to: 0.06 0.42 0; loop: true; dur: 2200; easing: easeInSine"
+      animation__op="property: opacity; from: 0.25; to: 0; loop: true; dur: 2200">
+    </a-sphere>
+    <!-- Buhar efekti 2 -->
+    <a-sphere position="-0.05 0.14 0" radius="0.018" color="#ffffff" opacity="0.2"
+      animation="property: position; from: -0.05 0.14 0; to: -0.08 0.38 0; loop: true; dur: 2800; delay: 600; easing: easeInSine"
+      animation__op="property: opacity; from: 0.2; to: 0; loop: true; dur: 2800; delay: 600">
+    </a-sphere>
+    <!-- Buhar efekti 3 -->
+    <a-sphere position="0.0 0.14 0" radius="0.02" color="#ffffff" opacity="0.22"
+      animation="property: position; from: 0 0.14 0; to: 0.03 0.45 0; loop: true; dur: 3100; delay: 1200; easing: easeInSine"
+      animation__op="property: opacity; from: 0.22; to: 0; loop: true; dur: 3100; delay: 1200">
+    </a-sphere>
+
+  </a-entity>
+  <!-- /mindar-image-target -->
+
+</a-scene>
+
+<!-- ══ JAVASCRIPT ════════════════════════════════════════════════ -->
+<script>
+  const splash     = document.getElementById('splash');
+  const startBtn   = document.getElementById('startBtn');
+  const hud        = document.getElementById('hud');
+  const scanPrompt = document.getElementById('scanPrompt');
+  const arScene    = document.getElementById('arScene');
+
+  startBtn.addEventListener('click', () => {
+    splash.classList.add('hide');
+    setTimeout(() => { splash.style.display = 'none'; }, 700);
+    hud.classList.add('show');
+    scanPrompt.classList.add('show');
+
+    // MindAR'ı başlat
+    arScene.components['mindar-image-system'].startAR();
+  });
+
+  // Target bulununca prompt'u gizle
+  arScene.addEventListener('targetFound', () => {
+    scanPrompt.classList.remove('show');
+    hud.querySelector('.hud-hint').textContent = '✅ Yemek hazır!';
+  });
+
+  // Target kaybolunca prompt'u tekrar göster
+  arScene.addEventListener('targetLost', () => {
+    scanPrompt.classList.add('show');
+    hud.querySelector('.hud-hint').textContent = '📸 Menüye doğrult';
+  });
+</script>
+</body>
+</html>
