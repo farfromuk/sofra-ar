@@ -5,15 +5,20 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
   <title>AR Menü — Demo</title>
 
-  <!-- MindAR + A-Frame -->
-  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+  <!-- A-Frame önce, MindAR sonra yüklenmeli -->
   <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
 
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=DM+Sans:wght@300;400;500&display=swap');
 
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #0a0a0a; overflow: hidden; font-family: 'DM Sans', sans-serif; }
+    body { background: #000; overflow: hidden; font-family: 'DM Sans', sans-serif; }
+
+    /* Kamera feed'i görünür yap */
+    a-scene { position: fixed !important; top: 0; left: 0; width: 100%; height: 100%; }
+    canvas.a-canvas { background: transparent !important; }
+    video { position: fixed; top: 0; left: 0; width: 100% !important; height: 100% !important; object-fit: cover; z-index: 0; }
 
     /* ── SPLASH SCREEN ─────────────────────────────────────── */
     #splash {
@@ -190,7 +195,8 @@
     uiScanning: no;
   "
   color-space="sRGB"
-  renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true;"
+  renderer="colorManagement: true; physicallyCorrectLights: true; antialias: true; alpha: true;"
+  background="color: transparent; transparent: true"
   vr-mode-ui="enabled: false"
   device-orientation-permission-ui="enabled: false"
   id="arScene"
