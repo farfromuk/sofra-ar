@@ -2,483 +2,405 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>AR Menü</title>
-<!-- A-Frame önce, MindAR sonra -->
-<script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+<!-- Model Viewer — Google, hafif ve hızlı -->
+<script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.3.0/dist/model-viewer.min.js"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Syne:wght@400;500;700&display=swap" rel="stylesheet"/>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-html,body{width:100%;height:100%;overflow:hidden;background:#000;font-family:-apple-system,sans-serif}
-
-/* Kamera + canvas */
-video{position:fixed!important;inset:0!important;width:100%!important;height:100%!important;object-fit:cover!important;z-index:0!important}
-canvas.a-canvas{position:fixed!important;inset:0!important;width:100%!important;height:100%!important;z-index:1!important;background:transparent!important}
-a-scene{position:fixed!important;inset:0!important;width:100%!important;height:100%!important;z-index:1!important}
-
-/* ━━ SPLASH ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-#splash{
-  position:fixed;inset:0;z-index:999;
-  background:#0d0b08;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:32px;gap:0;
-  transition:opacity .4s ease;
+:root{
+  --bg:#0d0b08; --bg2:#151210; --bg3:#1c1814;
+  --gold:#c8933a; --gold2:#e8b55a;
+  --cream:#f5ede0; --muted:#888070;
+  --white:#faf8f4; --border:rgba(255,255,255,.07);
 }
-#splash.hide{opacity:0;pointer-events:none}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--cream);font-family:'Syne',sans-serif;min-height:100vh;padding-bottom:100px}
 
-.s-logo{font-size:32px;font-weight:700;color:#f5ede0;letter-spacing:3px;margin-bottom:4px}
-.s-logo span{color:#c8933a}
-.s-tag{font-size:11px;color:#555;letter-spacing:2px;margin-bottom:36px;text-transform:uppercase}
-.s-icon{font-size:72px;margin-bottom:28px;display:block;animation:float 3s ease-in-out infinite}
-@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
-
-.s-steps{list-style:none;width:100%;max-width:290px;margin-bottom:28px;display:flex;flex-direction:column;gap:9px}
-.s-steps li{background:rgba(255,255,255,.05);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:11px 15px;font-size:13px;color:#bbb;display:flex;align-items:center;gap:11px}
-.s-steps li .n{width:22px;height:22px;border-radius:50%;background:#c8933a;color:#000;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
-
-/* Progress bar — hız algısı için */
-.s-progress-wrap{width:100%;max-width:290px;height:3px;background:rgba(255,255,255,.08);border-radius:2px;margin-bottom:12px;overflow:hidden}
-.s-progress-bar{height:100%;background:#c8933a;border-radius:2px;width:0%;transition:width .3s ease}
-
-#startBtn{
-  width:100%;max-width:290px;
-  background:#444;color:#777;
-  border:none;border-radius:50px;
-  padding:15px;font-size:15px;font-weight:700;
-  cursor:default;transition:background .3s,color .3s;
-  font-family:-apple-system,sans-serif;
+/* ━━ HEADER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+header{
+  position:sticky;top:0;z-index:50;
+  background:rgba(13,11,8,.95);
+  backdrop-filter:blur(12px);
+  border-bottom:1px solid var(--border);
+  padding:16px 20px 0;
 }
-#startBtn.ready{background:#c8933a;color:#000;cursor:pointer}
-.s-note{margin-top:10px;font-size:11px;color:#444}
+.h-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
+.h-logo{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;letter-spacing:2px}
+.h-logo span{color:var(--gold)}
+.h-badge{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);background:rgba(200,147,58,.1);border:1px solid rgba(200,147,58,.2);border-radius:20px;padding:4px 10px}
 
-/* ━━ HUD ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-#hud{
-  position:fixed;top:0;left:0;right:0;z-index:100;
-  display:none;justify-content:space-between;align-items:center;
-  padding:52px 20px 14px;
-  background:linear-gradient(to bottom,rgba(0,0,0,.55),transparent);
+/* Kategori sekmeleri */
+.cats{display:flex;gap:4px;overflow-x:auto;padding-bottom:1px;scrollbar-width:none}
+.cats::-webkit-scrollbar{display:none}
+.cat-btn{
+  white-space:nowrap;padding:8px 16px;border-radius:20px 20px 0 0;
+  background:transparent;border:1px solid var(--border);border-bottom:none;
+  color:var(--muted);font-size:12px;font-weight:500;letter-spacing:.5px;
+  cursor:pointer;transition:all .2s;font-family:'Syne',sans-serif;
+  flex-shrink:0;
 }
-#hud.show{display:flex}
-.h-brand{font-size:18px;font-weight:700;color:#fff;letter-spacing:1px}
-.h-brand span{color:#c8933a}
-.h-hint{font-size:12px;color:rgba(255,255,255,.8);background:rgba(0,0,0,.45);border-radius:20px;padding:6px 13px}
+.cat-btn.active{background:var(--gold);border-color:var(--gold);color:#000;font-weight:700}
 
-/* ━━ SCAN PROMPT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-#scanPrompt{
-  position:fixed;bottom:200px;left:50%;transform:translateX(-50%);
-  z-index:100;display:none;
-  background:rgba(0,0,0,.75);border:1px solid rgba(255,255,255,.15);
-  border-radius:16px;padding:13px 26px;
-  color:#fff;font-size:14px;white-space:nowrap;
-  animation:pulse 2s ease-in-out infinite;
+/* ━━ MAIN ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+main{padding:20px 16px}
+
+.cat-section{margin-bottom:36px}
+.cat-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:22px;font-weight:700;color:var(--cream);
+  margin-bottom:16px;padding-bottom:10px;
+  border-bottom:1px solid var(--border);
 }
-#scanPrompt.show{display:block}
-@keyframes pulse{0%,100%{opacity:.65}50%{opacity:1}}
 
-/* ━━ NAVBAR ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-#navBar{
-  position:fixed;bottom:0;left:0;right:0;
-  z-index:100;display:none;
-  flex-direction:column;align-items:center;
-  padding:0 0 30px;
-  background:linear-gradient(to top,rgba(0,0,0,.85) 70%,transparent);
+/* ━━ ÜRÜN KARTI ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.product-card{
+  background:var(--bg2);
+  border:1px solid var(--border);
+  border-radius:16px;
+  margin-bottom:12px;
+  overflow:hidden;
+  transition:border-color .2s;
 }
-#navBar.show{display:flex}
+.product-card:active{border-color:rgba(200,147,58,.3)}
 
-.p-info{text-align:center;margin-bottom:14px}
-.p-name{font-size:20px;font-weight:700;color:#f5ede0}
-.p-price{font-size:17px;color:#c8933a;font-weight:700;margin-top:2px}
+.card-main{display:flex;gap:14px;padding:16px}
 
-.dots{display:flex;gap:7px;margin-bottom:14px}
-.dot-i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.25);transition:background .3s,transform .3s}
-.dot-i.active{background:#c8933a;transform:scale(1.35)}
-
-.nav-btns{display:flex;gap:14px;align-items:center}
-.nav-btn{
-  width:54px;height:54px;border-radius:50%;
-  background:rgba(255,255,255,.1);
-  border:1.5px solid rgba(255,255,255,.2);
-  color:#fff;font-size:20px;
+.card-img{
+  width:90px;height:90px;border-radius:12px;
+  background:var(--bg3);flex-shrink:0;
   display:flex;align-items:center;justify-content:center;
-  cursor:pointer;transition:background .15s,transform .12s;
-  -webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px);
+  font-size:36px;overflow:hidden;position:relative;
 }
-.nav-btn:active{background:rgba(200,147,58,.35);transform:scale(.92)}
-.nav-btn.info-btn{
-  width:66px;height:66px;font-size:13px;font-weight:700;
-  background:#c8933a;border-color:#c8933a;color:#000;letter-spacing:.5px;
+.card-img img{width:100%;height:100%;object-fit:cover;border-radius:12px}
+
+.card-info{flex:1;min-width:0}
+.card-name{font-size:15px;font-weight:700;color:var(--cream);margin-bottom:4px;line-height:1.3}
+.card-desc{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:8px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.card-price{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--gold)}
+
+/* Aksiyon butonları */
+.card-actions{display:flex;gap:8px;padding:0 16px 14px}
+.act-btn{
+  flex:1;padding:9px 8px;border-radius:10px;border:none;
+  font-size:12px;font-weight:700;letter-spacing:.3px;
+  cursor:pointer;transition:all .15s;font-family:'Syne',sans-serif;
+  display:flex;align-items:center;justify-content:center;gap:5px;
+}
+.act-btn.view3d{background:var(--gold);color:#000}
+.act-btn.view3d:active{background:var(--gold2)}
+.act-btn.info{background:rgba(255,255,255,.06);color:var(--cream);border:1px solid var(--border)}
+.act-btn.info:active{background:rgba(255,255,255,.12)}
+
+/* ━━ 3D MODAL ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+#modal3d{
+  position:fixed;inset:0;z-index:200;
+  background:rgba(0,0,0,.92);
+  display:none;flex-direction:column;
+  align-items:center;justify-content:flex-start;
+  padding-top:60px;
+}
+#modal3d.show{display:flex}
+
+.modal-close{
+  position:absolute;top:16px;right:16px;
+  width:40px;height:40px;border-radius:50%;
+  background:rgba(255,255,255,.1);border:none;
+  color:#fff;font-size:20px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+}
+.modal-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:22px;font-weight:700;color:var(--cream);
+  margin-bottom:4px;text-align:center;padding:0 20px;
+}
+.modal-price{font-size:18px;color:var(--gold);font-weight:700;margin-bottom:20px}
+.modal-hint{font-size:11px;color:var(--muted);margin-top:12px;letter-spacing:1px}
+
+model-viewer{
+  width:min(380px,90vw);
+  height:min(380px,50vh);
+  background:transparent;
+  --poster-color:transparent;
 }
 
-/* ━━ DETAIL PANEL ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-#detailPanel{
-  position:fixed;bottom:0;left:0;right:0;
-  z-index:300;
+/* ━━ BİLGİ PANEL (bottom sheet) ━━━━━━━━━━━━━━━━━ */
+#infoPanel{
+  position:fixed;bottom:0;left:0;right:0;z-index:300;
   background:#0d0b08;
   border-top:1px solid rgba(200,147,58,.3);
   border-radius:20px 20px 0 0;
   padding:16px 22px 44px;
   transform:translateY(100%);
   transition:transform .32s cubic-bezier(.32,.72,0,1);
-  max-height:75vh;overflow-y:auto;
+  max-height:80vh;overflow-y:auto;
 }
-#detailPanel.show{transform:translateY(0)}
+#infoPanel.show{transform:translateY(0)}
 
-.dp-handle{width:34px;height:3px;background:rgba(255,255,255,.18);border-radius:2px;margin:0 auto 14px}
-.dp-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-.dp-title{font-size:17px;font-weight:700;color:#f5ede0}
-.dp-close{
-  width:30px;height:30px;border-radius:50%;
-  background:rgba(255,255,255,.1);border:none;
-  color:rgba(255,255,255,.6);font-size:16px;
-  display:flex;align-items:center;justify-content:center;
-  cursor:pointer;flex-shrink:0;
+.ip-handle{width:34px;height:3px;background:rgba(255,255,255,.18);border-radius:2px;margin:0 auto 14px}
+.ip-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.ip-title{font-size:17px;font-weight:700;color:var(--cream)}
+.ip-close{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+
+.ip-row{display:flex;gap:10px;margin-bottom:12px;align-items:flex-start}
+.ip-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);min-width:80px;padding-top:2px;font-weight:700;flex-shrink:0}
+.ip-val{font-size:13px;color:rgba(245,237,224,.8);line-height:1.55;flex:1}
+.ip-badge{display:inline-block;background:rgba(76,175,128,.15);color:#4caf80;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+.ip-divider{height:1px;background:rgba(255,255,255,.06);margin:14px 0}
+.ip-legal{font-size:10px;color:#444;line-height:1.65}
+
+/* ━━ FOOTER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.footer-badge{
+  text-align:center;padding:24px 20px;
+  border-top:1px solid var(--border);
+  margin-top:20px;
 }
-.dp-close:active{background:rgba(255,255,255,.2)}
-
-.dp-row{display:flex;gap:10px;margin-bottom:12px;align-items:flex-start}
-.dp-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:#c8933a;min-width:78px;padding-top:2px;font-weight:700}
-.dp-val{font-size:13px;color:rgba(245,237,224,.8);line-height:1.55;flex:1}
-.dp-badge{display:inline-block;background:rgba(76,175,128,.15);color:#4caf80;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
-
-.dp-divider{height:1px;background:rgba(255,255,255,.06);margin:14px 0}
-.dp-legal{font-size:10px;color:#444;line-height:1.65}
+.footer-badge p{font-size:10px;color:#444;letter-spacing:1px;margin-bottom:4px}
+.footer-badge strong{font-size:11px;color:var(--gold);letter-spacing:2px}
 </style>
 </head>
 <body>
 
-<!-- ━━ SPLASH ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
-<div id="splash">
-  <div class="s-logo">AR<span>Menü</span></div>
-  <div class="s-tag">Yemeği siparişten önce gör</div>
-  <span class="s-icon">🍕</span>
-  <ul class="s-steps">
-    <li><span class="n">1</span>Kamera iznine izin ver</li>
-    <li><span class="n">2</span>Menü kapağına doğrult</li>
-    <li><span class="n">3</span>Ürünler arasında geçiş yap</li>
-  </ul>
-  <div class="s-progress-wrap"><div class="s-progress-bar" id="progressBar"></div></div>
-  <button id="startBtn" disabled>Hazırlanıyor…</button>
-  <div class="s-note">Uygulama indirme gerekmez</div>
+<!-- ━━ HEADER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<header>
+  <div class="h-top">
+    <div class="h-logo">AR<span>Menü</span></div>
+    <div class="h-badge">🍕 Demo Restoran</div>
+  </div>
+  <div class="cats" id="cats">
+    <button class="cat-btn active" data-cat="pizza">Pizza</button>
+    <button class="cat-btn" data-cat="burger">Burger</button>
+    <button class="cat-btn" data-cat="icecek">İçecek</button>
+    <button class="cat-btn" data-cat="tatli">Tatlı</button>
+  </div>
+</header>
+
+<!-- ━━ MAIN ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<main id="main"></main>
+
+<div class="footer-badge">
+  <p>⚖️ Türk Gıda Kodeksi kapsamında zorunlu bilgilendirme</p>
+  <strong>AR MENÜ · DİJİTAL MENÜ SİSTEMİ</strong>
 </div>
 
-<!-- ━━ HUD ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
-<div id="hud">
-  <div class="h-brand">AR<span>Menü</span></div>
-  <div class="h-hint" id="hudHint">📸 Menüye doğrult</div>
+<!-- ━━ 3D MODAL ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="modal3d">
+  <button class="modal-close" id="close3d">✕</button>
+  <div class="modal-title" id="modal3dTitle">Pizza</div>
+  <div class="modal-price" id="modal3dPrice">₺289</div>
+  <model-viewer
+    id="modelViewer"
+    src=""
+    alt="3D model"
+    auto-rotate
+    camera-controls
+    shadow-intensity="0.5"
+    exposure="1.2"
+    loading="lazy"
+  ></model-viewer>
+  <div class="modal-hint">↔ Döndür &nbsp;·&nbsp; ⟲ Yakınlaştır &nbsp;·&nbsp; ↕ Eğ</div>
 </div>
 
-<!-- ━━ SCAN PROMPT ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
-<div id="scanPrompt">🔍 Menü kapağını kameraya göster</div>
-
-<!-- ━━ NAVBAR ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
-<div id="navBar">
-  <div class="p-info">
-    <div class="p-name" id="pName">Brokoli Pizza</div>
-    <div class="p-price" id="pPrice">₺289</div>
+<!-- ━━ BİLGİ PANELİ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="infoPanel">
+  <div class="ip-handle"></div>
+  <div class="ip-header">
+    <div class="ip-title" id="ipTitle"></div>
+    <button class="ip-close" id="ipClose">✕</button>
   </div>
-  <div class="dots" id="dots"></div>
-  <div class="nav-btns">
-    <button class="nav-btn" id="prevBtn">←</button>
-    <button class="nav-btn info-btn" id="infoBtn">BİLGİ</button>
-    <button class="nav-btn" id="nextBtn">→</button>
+  <div class="ip-row"><div class="ip-label">Kalori</div><div class="ip-val" id="ipKalori"></div></div>
+  <div class="ip-row"><div class="ip-label">İçerik</div><div class="ip-val" id="ipIcerik"></div></div>
+  <div class="ip-row"><div class="ip-label">Alerjen</div><div class="ip-val" id="ipAlerjen"></div></div>
+  <div class="ip-row">
+    <div class="ip-label">Domuz/Alkol</div>
+    <div class="ip-val"><span class="ip-badge" id="ipDomuz"></span></div>
   </div>
+  <div class="ip-divider"></div>
+  <div class="ip-legal">⚖️ Türk Gıda Kodeksi Gıda Etiketleme ve Tüketicileri Bilgilendirme Yönetmeliği kapsamında sunulmaktadır. Tarım ve Orman Bakanlığı tebliği gereğince zorunlu bilgilendirme.</div>
 </div>
-
-<!-- ━━ DETAIL PANEL ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
-<div id="detailPanel">
-  <div class="dp-handle"></div>
-  <div class="dp-header">
-    <div class="dp-title" id="dpTitle">Brokoli Pizza</div>
-    <button class="dp-close" id="dpClose">✕</button>
-  </div>
-  <div class="dp-row">
-    <div class="dp-label">Kalori</div>
-    <div class="dp-val" id="dpKalori">680 kcal</div>
-  </div>
-  <div class="dp-row">
-    <div class="dp-label">İçerik</div>
-    <div class="dp-val" id="dpIcerik">Un, domates sosu, mozzarella, brokoli, sarımsak, zeytinyağı</div>
-  </div>
-  <div class="dp-row">
-    <div class="dp-label">Alerjen</div>
-    <div class="dp-val" id="dpAlerjen">Glüten, Süt ürünleri</div>
-  </div>
-  <div class="dp-row">
-    <div class="dp-label">Domuz/Alkol</div>
-    <div class="dp-val"><span class="dp-badge" id="dpDomuz">✓ İçermez</span></div>
-  </div>
-  <div class="dp-divider"></div>
-  <div class="dp-legal">⚖️ Türk Gıda Kodeksi Gıda Etiketleme ve Tüketicileri Bilgilendirme Yönetmeliği kapsamında zorunlu bilgilendirme. Tarım ve Orman Bakanlığı tebliği gereğince sunulmaktadır.</div>
-</div>
-
-<!-- ━━ A-FRAME ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
-<a-scene
-  id="arScene"
-  mindar-image="imageTargetSrc:https://farfromuk.github.io/sofra-ar/targets.mind;autoStart:false;uiLoading:no;uiError:no;uiScanning:no;"
-  renderer="colorManagement:true;alpha:true;"
-  embedded
-  vr-mode-ui="enabled:false"
-  device-orientation-permission-ui="enabled:false"
->
-  <!-- Sadece ilk model önceden yüklenir — hız için -->
-  <a-assets timeout="8000">
-    <a-asset-item id="model0" src="https://farfromuk.github.io/sofra-ar/pizza.glb"></a-asset-item>
-  </a-assets>
-
-  <a-camera position="0 0 0" look-controls="enabled:false"></a-camera>
-  <a-light type="ambient"     color="#fff" intensity="1.0"></a-light>
-  <a-light type="directional" color="#fff" intensity="1.2" position="1 2 1"></a-light>
-  <a-light type="directional" color="#ffe8cc" intensity="0.5" position="-1 1 -1"></a-light>
-
-  <a-entity mindar-image-target="targetIndex:0" id="tracker"></a-entity>
-
-  <!-- Ürünler kamera önünde sabit — tracker'dan bağımsız -->
-  <a-entity id="arStage" position="0 -0.2 -1.2" visible="false">
-
-    <!-- ÜRÜN 0 -->
-    <a-entity id="p0" visible="true">
-      <a-entity gltf-model="#model0" position="0 0 0" scale="0.5 0.5 0.5" rotation="0 0 0"
-        animation="property:rotation;to:0 360 0;loop:true;dur:10000;easing:linear"></a-entity>
-    </a-entity>
-
-    <!-- ÜRÜN 1 — lazy -->
-    <a-entity id="p1" visible="false">
-      <a-entity id="mesh1" position="0 0 0" scale="0.5 0.5 0.5" rotation="0 0 0"
-        animation="property:rotation;to:0 360 0;loop:true;dur:10000;easing:linear"></a-entity>
-    </a-entity>
-
-    <!-- ÜRÜN 2 — lazy -->
-    <a-entity id="p2" visible="false">
-      <a-entity id="mesh2" position="0 0 0" scale="0.5 0.5 0.5" rotation="0 0 0"
-        animation="property:rotation;to:0 360 0;loop:true;dur:10000;easing:linear"></a-entity>
-    </a-entity>
-
-    <!-- Fiyat etiketi -->
-    <a-entity id="priceTag" visible="true" position="0 0.62 0"
-      animation="property:position;to:0 0.68 0;loop:true;dur:2200;dir:alternate;easing:easeInOutSine">
-      <a-plane width="0.68" height="0.30" color="#c8933a" opacity="0.4" position="0 0 -.002"></a-plane>
-      <a-plane width="0.66" height="0.28" color="#0d0b08" opacity="0.93" position="0 0 -.001"></a-plane>
-      <a-text id="tagName"  value="Brokoli Pizza" align="center" color="#f5ede0" width="1.5" font="https://cdn.aframe.io/fonts/Exo2Bold.fnt" position="0 0.06 .001"></a-text>
-      <a-text id="tagPrice" value="₺289"          align="center" color="#c8933a" width="1.9" font="https://cdn.aframe.io/fonts/Exo2Bold.fnt" position="0 -.05 .001"></a-text>
-    </a-entity>
-
-  </a-entity>
-</a-scene>
 
 <script>
-(function(){
-
-/* ━━ ÜRÜNLER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-const PRODUCTS = [
-  {
-    elId:'p0', meshId:null, glb:null, loaded:true,
-    name:'Brokoli Pizza',   price:'₺289',
-    kalori:'680 kcal',
-    icerik:'Un, domates sosu, mozzarella, brokoli, sarımsak, zeytinyağı',
-    alerjen:'Glüten, Süt ürünleri',
-    domuz:'İçermez'
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   MENÜ VERİSİ
+   Gerçek restorana göre burası değiştirilir.
+   glb: GitHub Pages'deki model URL'si (yoksa null — emoji gösterilir)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const MENU = {
+  pizza: {
+    title: 'Pizzalar',
+    items: [
+      {
+        id:'p1', name:'Brokoli Pizza', emoji:'🥦🍕', price:'₺289',
+        desc:'Taze brokoli, sarımsak, mozzarella, zeytinyağı, ince hamur',
+        glb:'https://farfromuk.github.io/sofra-ar/pizza.glb',
+        kalori:'680 kcal', icerik:'Un, domates sosu, mozzarella, brokoli, sarımsak, zeytinyağı',
+        alerjen:'Glüten, Süt ürünleri', domuz:'İçermez'
+      },
+      {
+        id:'p2', name:'Pepperoni Pizza', emoji:'🍕', price:'₺319',
+        desc:'Bol pepperoni, mozzarella, domates sosu, taze fesleğen',
+        glb:'https://farfromuk.github.io/sofra-ar/burger.glb',
+        kalori:'820 kcal', icerik:'Un, domates sosu, mozzarella, pepperoni, biber, zeytinyağı',
+        alerjen:'Glüten, Süt ürünleri', domuz:'İçermez'
+      },
+      {
+        id:'p3', name:'Margarita Pizza', emoji:'🍅🍕', price:'₺269',
+        desc:'San Marzano domates, buffalo mozzarella, taze fesleğen',
+        glb:'https://farfromuk.github.io/sofra-ar/sushi.glb',
+        kalori:'620 kcal', icerik:'Un, domates sosu, mozzarella, taze fesleğen, zeytinyağı',
+        alerjen:'Glüten, Süt ürünleri', domuz:'İçermez'
+      }
+    ]
   },
-  {
-    elId:'p1', meshId:'mesh1', glb:'https://farfromuk.github.io/sofra-ar/burger.glb', loaded:false,
-    name:'Pepperoni Pizza',  price:'₺319',
-    kalori:'820 kcal',
-    icerik:'Un, domates sosu, mozzarella, pepperoni, biber, zeytinyağı',
-    alerjen:'Glüten, Süt ürünleri',
-    domuz:'İçermez'
+  burger: {
+    title: 'Burgerler',
+    items: [
+      {
+        id:'b1', name:'Klasik Burger', emoji:'🍔', price:'₺219',
+        desc:'Dana eti, cheddar, domates, marul, özel sos, brioche ekmek',
+        glb:null,
+        kalori:'750 kcal', icerik:'Dana eti, cheddar, domates, marul, turşu, brioche ekmek, sos',
+        alerjen:'Glüten, Süt ürünleri, Yumurta', domuz:'İçermez'
+      },
+      {
+        id:'b2', name:'Crispy Chicken', emoji:'🍗', price:'₺199',
+        desc:'Çıtır tavuk, coleslaw, jalapeno, ranch sos',
+        glb:null,
+        kalori:'680 kcal', icerik:'Tavuk eti, un, yumurta, lahana, biber, ranch sos, ekmek',
+        alerjen:'Glüten, Yumurta, Süt ürünleri', domuz:'İçermez'
+      }
+    ]
   },
-  {
-    elId:'p2', meshId:'mesh2', glb:'https://farfromuk.github.io/sofra-ar/sushi.glb', loaded:false,
-    name:'Margarita Pizza',  price:'₺269',
-    kalori:'620 kcal',
-    icerik:'Un, domates sosu, mozzarella, taze fesleğen, zeytinyağı',
-    alerjen:'Glüten, Süt ürünleri',
-    domuz:'İçermez'
+  icecek: {
+    title: 'İçecekler',
+    items: [
+      {
+        id:'i1', name:'Limonata', emoji:'🍋', price:'₺69',
+        desc:'Taze sıkılmış limon, nane, soda',
+        glb:null,
+        kalori:'95 kcal', icerik:'Limon, şeker, nane, soda suyu',
+        alerjen:'Yok', domuz:'İçermez'
+      },
+      {
+        id:'i2', name:'Türk Çayı', emoji:'🍵', price:'₺29',
+        desc:'Rize çayı, demlik usulü',
+        glb:null,
+        kalori:'2 kcal', icerik:'Çay',
+        alerjen:'Yok', domuz:'İçermez'
+      }
+    ]
+  },
+  tatli: {
+    title: 'Tatlılar',
+    items: [
+      {
+        id:'t1', name:'Tiramisu', emoji:'🍰', price:'₺119',
+        desc:'Mascarpone, espresso, kakao, ladyfinger bisküvi',
+        glb:null,
+        kalori:'420 kcal', icerik:'Mascarpone, yumurta, şeker, kahve, bisküvi, kakao',
+        alerjen:'Glüten, Yumurta, Süt ürünleri', domuz:'İçermez'
+      }
+    ]
   }
-];
-
-let cur = 0;
-let navShown = false; // bir kez göründükten sonra hep kalır
-
-/* ━━ DOM ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-const arScene     = document.getElementById('arScene');
-const splash      = document.getElementById('splash');
-const startBtn    = document.getElementById('startBtn');
-const progressBar = document.getElementById('progressBar');
-const hud         = document.getElementById('hud');
-const hudHint     = document.getElementById('hudHint');
-const scanPrompt  = document.getElementById('scanPrompt');
-const navBar      = document.getElementById('navBar');
-const pName       = document.getElementById('pName');
-const pPrice      = document.getElementById('pPrice');
-const dotsEl      = document.getElementById('dots');
-const prevBtn     = document.getElementById('prevBtn');
-const nextBtn     = document.getElementById('nextBtn');
-const infoBtn     = document.getElementById('infoBtn');
-const detailPanel = document.getElementById('detailPanel');
-const dpClose     = document.getElementById('dpClose');
-const priceTag    = document.getElementById('priceTag');
-
-/* ━━ DOTS ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-PRODUCTS.forEach((_,i)=>{
-  const d = document.createElement('div');
-  d.className = 'dot-i' + (i===0?' active':'');
-  dotsEl.appendChild(d);
-});
-
-/* ━━ DETAIL PANEL — sadece BİLGİ butonuna basınca ━ */
-function openDetail(p){
-  document.getElementById('dpTitle').textContent   = p.name;
-  document.getElementById('dpKalori').textContent  = p.kalori;
-  document.getElementById('dpIcerik').textContent  = p.icerik;
-  document.getElementById('dpAlerjen').textContent = p.alerjen;
-  document.getElementById('dpDomuz').textContent   = '✓ ' + p.domuz;
-  detailPanel.classList.add('show');
-}
-function closeDetail(){ detailPanel.classList.remove('show'); }
-
-infoBtn.addEventListener('click', ()=>{
-  if(detailPanel.classList.contains('show')){ closeDetail(); }
-  else { openDetail(PRODUCTS[cur]); }
-});
-dpClose.addEventListener('click', closeDetail);
-
-/* ━━ LAZY LOAD ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-function lazyLoad(p){
-  if(p.loaded || !p.meshId) return;
-  const el = document.getElementById(p.meshId);
-  if(!el) return;
-  el.setAttribute('gltf-model', p.glb);
-  el.addEventListener('model-loaded',()=>{ p.loaded=true; },{once:true});
-}
-function loadAll(){
-  PRODUCTS.forEach(p=>{ if(!p.loaded) setTimeout(()=>lazyLoad(p), 400); });
-}
-
-/* ━━ ÜRÜN DEĞİŞTİR ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-function showProduct(idx){
-  document.getElementById(PRODUCTS[cur].elId).setAttribute('visible','false');
-  cur = (idx+PRODUCTS.length)%PRODUCTS.length;
-  const p = PRODUCTS[cur];
-  lazyLoad(p);
-  document.getElementById(p.elId).setAttribute('visible','true');
-
-  // UI
-  pName.textContent  = p.name;
-  pPrice.textContent = p.price;
-  document.getElementById('tagName').setAttribute('value', p.name);
-  document.getElementById('tagPrice').setAttribute('value', p.price);
-  document.querySelectorAll('.dot-i').forEach((d,i)=>d.classList.toggle('active',i===cur));
-
-  // Detay panel açıksa güncelle — kapalıysa dokunma
-  if(detailPanel.classList.contains('show')) openDetail(p);
-}
-
-/* ━━ NAV BUTONLAR ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-prevBtn.addEventListener('click', ()=>showProduct(cur-1));
-nextBtn.addEventListener('click', ()=>showProduct(cur+1));
-
-// Swipe — sadece navBar üzerinde
-let swX=0;
-navBar.addEventListener('touchstart', e=>{ swX=e.touches[0].clientX; });
-navBar.addEventListener('touchend',   e=>{
-  const dx=e.changedTouches[0].clientX-swX;
-  if(Math.abs(dx)>40) dx<0?showProduct(cur+1):showProduct(cur-1);
-});
-
-/* ━━ DÖNDÜRME & ZOOM ━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-let tx=0,ty=0,pinchD=0,rotX=0,rotY=0,sc=0.5;
-
-function activeMesh(){
-  if(cur===0) return document.querySelector('#p0 [gltf-model]');
-  return document.getElementById(PRODUCTS[cur].meshId);
-}
-
-document.addEventListener('touchstart', e=>{
-  if(e.target.closest('#navBar')||e.target.closest('#detailPanel')||e.target.closest('#hud')) return;
-  if(e.touches.length===1){ tx=e.touches[0].clientX; ty=e.touches[0].clientY; }
-  else if(e.touches.length===2){ pinchD=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY); }
-});
-
-document.addEventListener('touchmove', e=>{
-  if(e.target.closest('#navBar')||e.target.closest('#detailPanel')||e.target.closest('#hud')) return;
-  const mesh=activeMesh(); if(!mesh) return;
-  if(e.touches.length===1){
-    const dx=e.touches[0].clientX-tx, dy=e.touches[0].clientY-ty;
-    tx=e.touches[0].clientX; ty=e.touches[0].clientY;
-    rotY+=dx*.4; rotX-=dy*.4;
-    rotX=Math.max(-60,Math.min(60,rotX));
-    mesh.removeAttribute('animation');
-    mesh.setAttribute('rotation',`${rotX} ${rotY} 0`);
-  } else if(e.touches.length===2){
-    e.preventDefault();
-    const d=Math.hypot(e.touches[0].clientX-e.touches[1].clientX, e.touches[0].clientY-e.touches[1].clientY);
-    sc=Math.max(.2,Math.min(1.2,sc+(d-pinchD)*.003));
-    pinchD=d;
-    mesh.setAttribute('scale',`${sc} ${sc} ${sc}`);
-  }
-},{passive:false});
-
-document.addEventListener('dblclick',()=>{
-  const mesh=activeMesh(); if(!mesh) return;
-  rotX=0;rotY=0;sc=0.5;
-  mesh.setAttribute('rotation','0 0 0');
-  mesh.setAttribute('scale','0.5 0.5 0.5');
-  mesh.setAttribute('animation','property:rotation;to:0 360 0;loop:true;dur:10000;easing:linear');
-});
-
-/* ━━ YÜKLEME — PROGRESS BAR ile hız algısı ━━━━━━━ */
-let prog=0;
-const progTimer=setInterval(()=>{
-  prog=Math.min(prog+Math.random()*12, 90);
-  progressBar.style.width=prog+'%';
-},200);
-
-const onLoaded=()=>{
-  clearInterval(progTimer);
-  progressBar.style.width='100%';
-  setTimeout(()=>{
-    startBtn.disabled=false;
-    startBtn.classList.add('ready');
-    startBtn.textContent='📷 Kamerayı Aç';
-  },300);
 };
-if(arScene.hasLoaded){ onLoaded(); }
-else{ arScene.addEventListener('loaded', onLoaded, {once:true}); }
 
-/* ━━ START BUTONU ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-startBtn.addEventListener('click',()=>{
-  if(!startBtn.classList.contains('ready')) return;
-  splash.classList.add('hide');
-  const sys=arScene.systems['mindar-image-system'];
-  if(sys){
-    sys.start();
-    hud.classList.add('show');
-    scanPrompt.classList.add('show');
-    loadAll(); // arka planda diğer modeller
-  }
+/* ━━ RENDER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const main = document.getElementById('main');
+
+function renderAll() {
+  main.innerHTML = '';
+  Object.entries(MENU).forEach(([key, cat]) => {
+    const sec = document.createElement('section');
+    sec.className = 'cat-section';
+    sec.id = 'cat-' + key;
+    sec.innerHTML = `<div class="cat-title">${cat.title}</div>`;
+    cat.items.forEach(item => {
+      const card = document.createElement('div');
+      card.className = 'product-card';
+      card.innerHTML = `
+        <div class="card-main">
+          <div class="card-img">${item.emoji}</div>
+          <div class="card-info">
+            <div class="card-name">${item.name}</div>
+            <div class="card-desc">${item.desc}</div>
+            <div class="card-price">${item.price}</div>
+          </div>
+        </div>
+        <div class="card-actions">
+          ${item.glb
+            ? `<button class="act-btn view3d" data-id="${item.id}">🔄 3D Gör</button>`
+            : `<button class="act-btn view3d" style="opacity:.35;pointer-events:none">🔄 3D Yakında</button>`
+          }
+          <button class="act-btn info" data-id="${item.id}">📋 Besin Bilgisi</button>
+        </div>`;
+      sec.appendChild(card);
+    });
+    main.appendChild(sec);
+  });
+}
+
+renderAll();
+
+/* ━━ KATEGORİ NAV ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+document.getElementById('cats').addEventListener('click', e => {
+  const btn = e.target.closest('.cat-btn');
+  if (!btn) return;
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const sec = document.getElementById('cat-' + btn.dataset.cat);
+  if (sec) sec.scrollIntoView({ behavior:'smooth', block:'start' });
 });
 
-/* ━━ TARGET FOUND / LOST ━━━━━━━━━━━━━━━━━━━━━━━━ */
-const arStage = document.getElementById('arStage');
+/* ━━ TÜKÜM veri bul ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function findItem(id) {
+  for (const cat of Object.values(MENU))
+    for (const item of cat.items)
+      if (item.id === id) return item;
+  return null;
+}
 
-arScene.addEventListener('targetFound',()=>{
-  scanPrompt.classList.remove('show');
-  hudHint.textContent='✅ ' + PRODUCTS[cur].name;
+/* ━━ 3D MODAL ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const modal3d    = document.getElementById('modal3d');
+const modelViewer= document.getElementById('modelViewer');
+const close3d    = document.getElementById('close3d');
 
-  // İlk kez görüldüğünde her şeyi aç — artık hiç kapanmaz
-  if(!navShown){
-    navShown=true;
-    navBar.classList.add('show');
-    arStage.setAttribute('visible','true'); // 3D model çıkar
-  }
+function open3d(item) {
+  document.getElementById('modal3dTitle').textContent = item.name;
+  document.getElementById('modal3dPrice').textContent = item.price;
+  modelViewer.setAttribute('src', item.glb);
+  modal3d.classList.add('show');
+}
+close3d.addEventListener('click', () => {
+  modal3d.classList.remove('show');
+  modelViewer.setAttribute('src','');
 });
 
-arScene.addEventListener('targetLost',()=>{
-  // Hiçbir şey kapanmıyor — model, navBar, panel hepsi kalır
-  hudHint.textContent='📸 Menüye doğrult';
-});
+/* ━━ BİLGİ PANELİ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const infoPanel = document.getElementById('infoPanel');
+const ipClose   = document.getElementById('ipClose');
 
-})();
+function openInfo(item) {
+  document.getElementById('ipTitle').textContent   = item.name;
+  document.getElementById('ipKalori').textContent  = item.kalori;
+  document.getElementById('ipIcerik').textContent  = item.icerik;
+  document.getElementById('ipAlerjen').textContent = item.alerjen;
+  document.getElementById('ipDomuz').textContent   = '✓ ' + item.domuz;
+  infoPanel.classList.add('show');
+}
+ipClose.addEventListener('click', () => infoPanel.classList.remove('show'));
+
+/* ━━ BUTON DELEGASYONU ━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+main.addEventListener('click', e => {
+  const btn = e.target.closest('.act-btn');
+  if (!btn) return;
+  const item = findItem(btn.dataset.id);
+  if (!item) return;
+  if (btn.classList.contains('view3d')) open3d(item);
+  if (btn.classList.contains('info'))   openInfo(item);
+});
 </script>
 </body>
 </html>
