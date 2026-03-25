@@ -58,8 +58,50 @@ a-scene {
 #hud .brand span { color: #c8933a; }
 #hud .hint { font-size: 12px; color: rgba(255,255,255,0.85); background: rgba(0,0,0,0.45); border-radius: 20px; padding: 6px 14px; }
 
-/* ── SCAN PROMPT ── */
-#scanPrompt { position: fixed; bottom: 140px; left: 50%; transform: translateX(-50%); z-index: 100; display: none; background: rgba(0,0,0,0.75); border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 14px 28px; color: #fff; font-size: 14px; white-space: nowrap; font-family: -apple-system, sans-serif; animation: pulse 2s ease-in-out infinite; }
+/* ── DETAIL PANEL ── */
+#detailPanel {
+  position: fixed; bottom: 0; left: 0; right: 0;
+  z-index: 200;
+  background: rgba(13,11,8,0.97);
+  border-top: 1px solid rgba(200,147,58,0.3);
+  border-radius: 20px 20px 0 0;
+  padding: 20px 24px 40px;
+  font-family: -apple-system, sans-serif;
+  transform: translateY(100%);
+  transition: transform 0.35s ease;
+}
+#detailPanel.show { transform: translateY(0); }
+
+.detail-handle {
+  width: 36px; height: 4px; background: rgba(255,255,255,0.2);
+  border-radius: 2px; margin: 0 auto 16px;
+}
+.detail-title {
+  font-size: 16px; font-weight: 700; color: #f5ede0;
+  margin-bottom: 16px;
+}
+.detail-row {
+  display: flex; gap: 10px; margin-bottom: 10px;
+  align-items: flex-start;
+}
+.detail-label {
+  font-size: 11px; letter-spacing: 1px; text-transform: uppercase;
+  color: #c8933a; min-width: 80px; padding-top: 1px; font-weight: 600;
+}
+.detail-value {
+  font-size: 13px; color: rgba(245,237,224,0.8); line-height: 1.5; flex: 1;
+}
+.detail-badge {
+  display: inline-block; background: rgba(76,175,128,0.15);
+  color: #4caf80; font-size: 11px; font-weight: 700;
+  padding: 3px 10px; border-radius: 20px; margin-top: 2px;
+}
+.compliance-note {
+  margin-top: 16px; padding-top: 14px;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  font-size: 10px; color: #555; line-height: 1.6;
+}
+#scanPrompt { position: fixed; bottom: 280px; left: 50%; transform: translateX(-50%); z-index: 100; display: none; background: rgba(0,0,0,0.75); border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 14px 28px; color: #fff; font-size: 14px; white-space: nowrap; font-family: -apple-system, sans-serif; animation: pulse 2s ease-in-out infinite; }
 #scanPrompt.show { display: block; }
 @keyframes pulse { 0%,100%{opacity:0.7} 50%{opacity:1} }
 
@@ -142,8 +184,36 @@ a-scene {
   <div class="dots" id="dots"></div>
   <div class="nav-buttons">
     <button class="nav-btn" id="prevBtn">←</button>
-    <button class="nav-btn center" id="menuBtn">MENÜ</button>
+    <button class="nav-btn center" id="menuBtn">BİLGİ</button>
     <button class="nav-btn" id="nextBtn">→</button>
+  </div>
+</div>
+
+<!-- DETAIL PANEL (yasal zorunluluk bilgileri) -->
+<div id="detailPanel">
+  <div class="detail-handle"></div>
+  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">
+    <div class="detail-title" id="detailTitle">Brokoli Pizza</div>
+    <button id="closeDetail" style="background:rgba(255,255,255,0.08); border:none; color:#888; font-size:18px; width:30px; height:30px; border-radius:50%; cursor:pointer; display:flex; align-items:center; justify-content:center;">✕</button>
+  </div>
+  <div class="detail-row">
+    <div class="detail-label">Kalori</div>
+    <div class="detail-value" id="detailKalori">680 kcal</div>
+  </div>
+  <div class="detail-row">
+    <div class="detail-label">İçerik</div>
+    <div class="detail-value" id="detailIcerik">Un, domates sosu, mozzarella, brokoli, sarımsak, zeytinyağı</div>
+  </div>
+  <div class="detail-row">
+    <div class="detail-label">Alerjen</div>
+    <div class="detail-value" id="detailAlerjen">Glüten, Süt ürünleri</div>
+  </div>
+  <div class="detail-row">
+    <div class="detail-label">Domuz/Alkol</div>
+    <div class="detail-value"><span class="detail-badge" id="detailDomuz">✓ İçermez</span></div>
+  </div>
+  <div class="compliance-note">
+    ⚖️ Türk Gıda Kodeksi Gıda Etiketleme ve Tüketicileri Bilgilendirme Yönetmeliği kapsamında sunulmaktadır. Tarım ve Orman Bakanlığı tebliği gereğince zorunlu bilgilendirme.
   </div>
 </div>
 
@@ -156,13 +226,9 @@ a-scene {
   vr-mode-ui="enabled: false"
   device-orientation-permission-ui="enabled: false"
 >
-  <a-assets>
-    <!-- Ürün 1 — Brokoli Pizza (mevcut) -->
+  <a-assets timeout="10000">
+    <!-- Sadece ilk model assets içinde — hızlı başlatmak için -->
     <a-asset-item id="model0" src="https://farfromuk.github.io/sofra-ar/pizza.glb"></a-asset-item>
-    <!-- Ürün 2 — Burger (GLB yüklenince src değiştirilecek) -->
-    <a-asset-item id="model1" src="https://farfromuk.github.io/sofra-ar/burger.glb"></a-asset-item>
-    <!-- Ürün 3 — Sushi / diğer ürün -->
-    <a-asset-item id="model2" src="https://farfromuk.github.io/sofra-ar/sushi.glb"></a-asset-item>
   </a-assets>
 
   <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
@@ -172,35 +238,29 @@ a-scene {
 
   <a-entity mindar-image-target="targetIndex: 0">
 
-    <!-- ÜRÜN 0 — Brokoli Pizza -->
+    <!-- ÜRÜN 0 — Brokoli Pizza (başta yüklü) -->
     <a-entity id="product0" visible="true">
       <a-entity
         gltf-model="#model0"
         position="0 0.05 0" scale="0.5 0.5 0.5" rotation="0 0 0"
         animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear">
       </a-entity>
-      <!-- Buhar -->
       <a-sphere position=" 0.03 0.18 0" radius="0.02" color="#fff" opacity="0.2"
         animation="property: position; from: 0.03 0.18 0; to: 0.05 0.45 0; loop: true; dur: 2000; easing: easeInSine"
         animation__op="property: opacity; from: 0.2; to: 0; loop: true; dur: 2000"></a-sphere>
     </a-entity>
 
-    <!-- ÜRÜN 1 — Burger -->
+    <!-- ÜRÜN 1 — Pepperoni (lazy, src JS ile set edilir) -->
     <a-entity id="product1" visible="false">
-      <a-entity
-        gltf-model="#model1"
+      <a-entity id="mesh1"
         position="0 0.05 0" scale="0.5 0.5 0.5" rotation="0 0 0"
         animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear">
       </a-entity>
-      <a-sphere position="-0.03 0.18 0" radius="0.018" color="#fff" opacity="0.2"
-        animation="property: position; from: -0.03 0.18 0; to: -0.05 0.44 0; loop: true; dur: 2200; delay: 300; easing: easeInSine"
-        animation__op="property: opacity; from: 0.2; to: 0; loop: true; dur: 2200; delay: 300"></a-sphere>
     </a-entity>
 
-    <!-- ÜRÜN 2 — Sushi -->
+    <!-- ÜRÜN 2 — Margarita (lazy) -->
     <a-entity id="product2" visible="false">
-      <a-entity
-        gltf-model="#model2"
+      <a-entity id="mesh2"
         position="0 0.05 0" scale="0.5 0.5 0.5" rotation="0 0 0"
         animation="property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear">
       </a-entity>
@@ -223,22 +283,42 @@ a-scene {
 
   // ── ÜRÜN LİSTESİ ──────────────────────────────────────────
   const PRODUCTS = [
-    { id: 'product0', name: 'Brokoli Pizza',    price: '₺289' },
-    { id: 'product1', name: 'Pepperoni Pizza',  price: '₺319' },
-    { id: 'product2', name: 'Margarita Pizza',  price: '₺269' },
+    {
+      id: 'product0', meshId: null, src: null, loaded: true,
+      name: 'Brokoli Pizza',   price: '₺289',
+      kalori: '680 kcal',
+      icerik: 'Un, domates sosu, mozzarella, brokoli, sarımsak, zeytinyağı',
+      alerjen: 'Glüten, Süt ürünleri',
+      domuzAlkol: 'İçermez'
+    },
+    {
+      id: 'product1', meshId: 'mesh1', src: 'https://farfromuk.github.io/sofra-ar/burger.glb', loaded: false,
+      name: 'Pepperoni Pizza', price: '₺319',
+      kalori: '820 kcal',
+      icerik: 'Un, domates sosu, mozzarella, pepperoni, biber, zeytinyağı',
+      alerjen: 'Glüten, Süt ürünleri',
+      domuzAlkol: 'İçermez'
+    },
+    {
+      id: 'product2', meshId: 'mesh2', src: 'https://farfromuk.github.io/sofra-ar/sushi.glb', loaded: false,
+      name: 'Margarita Pizza', price: '₺269',
+      kalori: '620 kcal',
+      icerik: 'Un, domates sosu, mozzarella, taze fesleğen, zeytinyağı',
+      alerjen: 'Glüten, Süt ürünleri',
+      domuzAlkol: 'İçermez'
+    },
   ];
   let current = 0;
-  let targetVisible = false;
 
   // ── DOM REFS ───────────────────────────────────────────────
-  const arScene    = document.getElementById('arScene');
-  const splash     = document.getElementById('splash');
-  const startBtn   = document.getElementById('startBtn');
-  const loadLabel  = document.getElementById('loadingLabel');
-  const hud        = document.getElementById('hud');
-  const hudHint    = document.getElementById('hudHint');
-  const scanPrompt = document.getElementById('scanPrompt');
-  const navBar     = document.getElementById('navBar');
+  const arScene      = document.getElementById('arScene');
+  const splash       = document.getElementById('splash');
+  const startBtn     = document.getElementById('startBtn');
+  const loadLabel    = document.getElementById('loadingLabel');
+  const hud          = document.getElementById('hud');
+  const hudHint      = document.getElementById('hudHint');
+  const scanPrompt   = document.getElementById('scanPrompt');
+  const navBar       = document.getElementById('navBar');
   const productName  = document.getElementById('productName');
   const productPrice = document.getElementById('productPrice');
   const dotsEl       = document.getElementById('dots');
@@ -250,57 +330,165 @@ a-scene {
   PRODUCTS.forEach((_, i) => {
     const d = document.createElement('div');
     d.className = 'dot-ind' + (i === 0 ? ' active' : '');
-    d.dataset.i = i;
     dotsEl.appendChild(d);
   });
 
+  // ── LAZY LOAD: arka planda GLB indir ──────────────────────
+  function lazyLoad(p) {
+    if (p.loaded || !p.meshId) return;
+    const mesh = document.getElementById(p.meshId);
+    if (!mesh) return;
+    mesh.setAttribute('gltf-model', p.src);
+    mesh.addEventListener('model-loaded', () => { p.loaded = true; }, { once: true });
+  }
+
+  // Kamera açılınca arka planda diğer modelleri indir
+  function startBackgroundLoading() {
+    PRODUCTS.forEach(p => { if (!p.loaded) setTimeout(() => lazyLoad(p), 500); });
+  }
+
   // ── ÜRÜN DEĞİŞTİR ─────────────────────────────────────────
   function showProduct(idx) {
-    // Eski ürünü gizle
     const old = document.getElementById(PRODUCTS[current].id);
     if (old) old.setAttribute('visible', 'false');
 
     current = (idx + PRODUCTS.length) % PRODUCTS.length;
+    const p = PRODUCTS[current];
 
-    // Yeni ürünü göster
-    const next = document.getElementById(PRODUCTS[current].id);
-    if (next) next.setAttribute('visible', 'true');
+    // Lazy load tetikle (henüz yüklenmemişse)
+    lazyLoad(p);
+
+    const el = document.getElementById(p.id);
+    if (el) el.setAttribute('visible', 'true');
 
     // UI güncelle
-    const p = PRODUCTS[current];
     productName.textContent  = p.name;
     productPrice.textContent = p.price;
 
-    // A-Frame text güncelle
     const tagName  = document.getElementById('tagName');
     const tagPrice = document.getElementById('tagPrice');
     if (tagName)  tagName.setAttribute('value',  p.name);
     if (tagPrice) tagPrice.setAttribute('value', p.price);
 
-    // Dots güncelle
     document.querySelectorAll('.dot-ind').forEach((d, i) => {
       d.classList.toggle('active', i === current);
     });
 
-    // product-info animasyon yenile
     productName.parentElement.style.animation = 'none';
     void productName.parentElement.offsetWidth;
     productName.parentElement.style.animation = 'fadeIn 0.3s ease';
+
+    // Detay paneli açıksa güncelle — kapalıysa da aç
+    updateDetailPanel(PRODUCTS[current]);
+    detailPanel.classList.add('show');
   }
+
+  // ── DETAIL PANEL ───────────────────────────────────────────
+  const detailPanel = document.getElementById('detailPanel');
+  const menuBtn     = document.getElementById('menuBtn');
+
+  function updateDetailPanel(p) {
+    document.getElementById('detailTitle').textContent  = p.name;
+    document.getElementById('detailKalori').textContent = p.kalori;
+    document.getElementById('detailIcerik').textContent = p.icerik;
+    document.getElementById('detailAlerjen').textContent = p.alerjen;
+    document.getElementById('detailDomuz').textContent  = '✓ ' + p.domuzAlkol;
+  }
+
+  menuBtn.addEventListener('click', () => {
+    updateDetailPanel(PRODUCTS[current]);
+    detailPanel.classList.toggle('show');
+  });
+
+  document.getElementById('closeDetail').addEventListener('click', () => {
+    detailPanel.classList.remove('show');
+  });
 
   // ── NAV BUTONLAR ───────────────────────────────────────────
   prevBtn.addEventListener('click', () => showProduct(current - 1));
   nextBtn.addEventListener('click', () => showProduct(current + 1));
 
-  // Swipe desteği
   let touchStartX = 0;
-  document.addEventListener('touchstart', e => { touchStartX = e.touches[0].clientX; });
-  document.addEventListener('touchend', e => {
-    const dx = e.changedTouches[0].clientX - touchStartX;
-    if (Math.abs(dx) > 50) dx < 0 ? showProduct(current + 1) : showProduct(current - 1);
+  let touchStartY = 0;
+  let lastPinchDist = 0;
+
+  // Model rotation state
+  let rotX = 0, rotY = 0, scale = 0.5;
+
+  function getActiveMesh() {
+    const p = PRODUCTS[current];
+    if (current === 0) return document.querySelector('#product0 [gltf-model]');
+    return document.getElementById(p.meshId);
+  }
+
+  // Touch başlangıç
+  document.addEventListener('touchstart', e => {
+    if (e.touches.length === 1) {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+    } else if (e.touches.length === 2) {
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      lastPinchDist = Math.hypot(dx, dy);
+    }
   });
 
-  // ── SAHNE YÜKLEME ──────────────────────────────────────────
+  // Touch hareket — döndür veya yakınlaştır
+  document.addEventListener('touchmove', e => {
+    // Nav butonlarına dokunuluyorsa atla
+    if (e.target.closest('#navBar') || e.target.closest('#hud')) return;
+
+    const mesh = getActiveMesh();
+    if (!mesh) return;
+
+    if (e.touches.length === 1) {
+      // Tek parmak — döndür
+      const dx = e.touches[0].clientX - touchStartX;
+      const dy = e.touches[0].clientY - touchStartY;
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+
+      rotY += dx * 0.4;
+      rotX -= dy * 0.4;
+      rotX = Math.max(-60, Math.min(60, rotX)); // Yukarı/aşağı sınırla
+
+      // Animasyonu durdur, manuel rotation uygula
+      mesh.removeAttribute('animation');
+      mesh.setAttribute('rotation', `${rotX} ${rotY} 0`);
+
+    } else if (e.touches.length === 2) {
+      // İki parmak — zoom
+      e.preventDefault();
+      const dx = e.touches[0].clientX - e.touches[1].clientX;
+      const dy = e.touches[0].clientY - e.touches[1].clientY;
+      const dist = Math.hypot(dx, dy);
+      const delta = (dist - lastPinchDist) * 0.003;
+      lastPinchDist = dist;
+
+      scale = Math.max(0.2, Math.min(1.2, scale + delta));
+      mesh.setAttribute('scale', `${scale} ${scale} ${scale}`);
+    }
+  }, { passive: false });
+
+  // Çift tıkla sıfırla
+  document.addEventListener('dblclick', () => {
+    const mesh = getActiveMesh();
+    if (!mesh) return;
+    rotX = 0; rotY = 0; scale = 0.5;
+    mesh.setAttribute('rotation', '0 0 0');
+    mesh.setAttribute('scale', '0.5 0.5 0.5');
+    mesh.setAttribute('animation', 'property: rotation; to: 0 360 0; loop: true; dur: 10000; easing: linear');
+  });
+
+  // Swipe ile ürün geçişi — sadece navBar üzerinde
+  let swipeStartX = 0;
+  navBar.addEventListener('touchstart', e => { swipeStartX = e.touches[0].clientX; });
+  navBar.addEventListener('touchend', e => {
+    const dx = e.changedTouches[0].clientX - swipeStartX;
+    if (Math.abs(dx) > 40) dx < 0 ? showProduct(current + 1) : showProduct(current - 1);
+  });
+
+  // ── SAHNE YÜKLEME — sadece model0 beklenir ────────────────
   const onLoaded = () => {
     startBtn.disabled = false;
     startBtn.classList.add('ready');
@@ -319,24 +507,27 @@ a-scene {
       sys.start();
       hud.classList.add('show');
       scanPrompt.classList.add('show');
+      startBackgroundLoading(); // ← kamera açılınca diğerleri arka planda iner
     }
   });
 
   // ── TARGET FOUND/LOST ──────────────────────────────────────
   arScene.addEventListener('targetFound', () => {
-    targetVisible = true;
     scanPrompt.classList.remove('show');
     navBar.classList.add('show');
     priceTag.setAttribute('visible', 'true');
     hudHint.textContent = '✅ ' + PRODUCTS[current].name;
+    // Menü tanınınca otomatik içerik paneli aç
+    updateDetailPanel(PRODUCTS[current]);
+    detailPanel.classList.add('show');
   });
 
   arScene.addEventListener('targetLost', () => {
-    targetVisible = false;
     scanPrompt.classList.add('show');
     navBar.classList.remove('show');
     priceTag.setAttribute('visible', 'false');
     hudHint.textContent = '📸 Menüye doğrult';
+    // Detay paneli kapatılmıyor — müşteri kendisi kapatana kadar kalır
   });
 
 })();
