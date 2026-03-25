@@ -2,404 +2,697 @@
 <html lang="tr">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>AR Menü</title>
-<!-- Model Viewer — Google, hafif ve hızlı -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+<title>AR Menü — Demo Restoran</title>
 <script type="module" src="https://cdn.jsdelivr.net/npm/@google/model-viewer@3.3.0/dist/model-viewer.min.js"></script>
+<script>
+// Model-viewer custom element hazır olana kadar bekle
+window.modelViewerReady = new Promise(resolve => {
+  if(customElements.get('model-viewer')) { resolve(); return; }
+  customElements.whenDefined('model-viewer').then(resolve);
+});
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@600;700&family=Syne:wght@400;500;700&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Syne:wght@400;500;700;800&display=swap" rel="stylesheet"/>
 <style>
 :root{
-  --bg:#0d0b08; --bg2:#151210; --bg3:#1c1814;
-  --gold:#c8933a; --gold2:#e8b55a;
-  --cream:#f5ede0; --muted:#888070;
-  --white:#faf8f4; --border:rgba(255,255,255,.07);
+  --bg:#080705;
+  --bg2:#0f0d0a;
+  --bg3:#161310;
+  --bg4:#1e1a15;
+  --gold:#c8933a;
+  --gold2:#e8b55a;
+  --gold3:rgba(200,147,58,.12);
+  --cream:#f5ede0;
+  --muted:#7a7060;
+  --border:rgba(255,255,255,.06);
+  --border2:rgba(200,147,58,.2);
 }
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html{scroll-behavior:smooth}
-body{background:var(--bg);color:var(--cream);font-family:'Syne',sans-serif;min-height:100vh;padding-bottom:100px}
-
-/* ━━ HEADER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-header{
-  position:sticky;top:0;z-index:50;
-  background:rgba(13,11,8,.95);
-  backdrop-filter:blur(12px);
-  border-bottom:1px solid var(--border);
-  padding:16px 20px 0;
+html{scroll-behavior:smooth;height:100%}
+body{
+  background:var(--bg);
+  color:var(--cream);
+  font-family:'Syne',sans-serif;
+  min-height:100vh;
+  padding-bottom:120px;
+  /* Noise texture overlay */
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size:200px;
+  background-blend-mode:overlay;
+  background-color:var(--bg);
 }
-.h-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px}
-.h-logo{font-family:'Cormorant Garamond',serif;font-size:24px;font-weight:700;letter-spacing:2px}
-.h-logo span{color:var(--gold)}
-.h-badge{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);background:rgba(200,147,58,.1);border:1px solid rgba(200,147,58,.2);border-radius:20px;padding:4px 10px}
 
-/* Kategori sekmeleri */
-.cats{display:flex;gap:4px;overflow-x:auto;padding-bottom:1px;scrollbar-width:none}
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   HERO HEADER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.hero{
+  position:relative;
+  padding:60px 24px 0;
+  text-align:center;
+  overflow:hidden;
+}
+.hero::before{
+  content:'';
+  position:absolute;top:-80px;left:50%;transform:translateX(-50%);
+  width:400px;height:400px;border-radius:50%;
+  background:radial-gradient(circle,rgba(200,147,58,.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:8px;
+  font-size:10px;letter-spacing:4px;text-transform:uppercase;
+  color:var(--gold);margin-bottom:16px;font-weight:500;
+}
+.hero-eyebrow::before,.hero-eyebrow::after{content:'';display:block;width:20px;height:1px;background:var(--gold)}
+.hero-name{
+  font-family:'Cormorant Garamond',serif;
+  font-size:clamp(2.4rem,8vw,3.6rem);
+  font-weight:700;color:var(--cream);
+  line-height:1.05;margin-bottom:8px;
+}
+.hero-name em{font-style:italic;color:var(--gold)}
+.hero-sub{font-size:12px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-bottom:32px}
+
+/* Stats row */
+.hero-stats{
+  display:flex;justify-content:center;gap:0;
+  border:1px solid var(--border);border-radius:16px;
+  overflow:hidden;margin:0 0 0;
+  background:var(--bg2);
+}
+.stat{
+  flex:1;padding:14px 12px;text-align:center;
+  border-right:1px solid var(--border);
+}
+.stat:last-child{border-right:none}
+.stat-num{font-family:'Cormorant Garamond',serif;font-size:1.5rem;font-weight:700;color:var(--gold);line-height:1}
+.stat-label{font-size:9px;color:var(--muted);letter-spacing:1.5px;text-transform:uppercase;margin-top:2px}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   STICKY NAV
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.sticky-nav{
+  position:sticky;top:0;z-index:50;
+  padding:12px 20px;
+  background:rgba(8,7,5,.9);
+  backdrop-filter:blur(20px);
+  border-bottom:1px solid var(--border);
+}
+.cats{display:flex;gap:6px;overflow-x:auto;scrollbar-width:none}
 .cats::-webkit-scrollbar{display:none}
 .cat-btn{
-  white-space:nowrap;padding:8px 16px;border-radius:20px 20px 0 0;
-  background:transparent;border:1px solid var(--border);border-bottom:none;
-  color:var(--muted);font-size:12px;font-weight:500;letter-spacing:.5px;
+  white-space:nowrap;padding:7px 18px;border-radius:50px;
+  background:transparent;border:1px solid var(--border);
+  color:var(--muted);font-size:11px;font-weight:500;letter-spacing:1px;
   cursor:pointer;transition:all .2s;font-family:'Syne',sans-serif;
-  flex-shrink:0;
+  flex-shrink:0;text-transform:uppercase;
 }
-.cat-btn.active{background:var(--gold);border-color:var(--gold);color:#000;font-weight:700}
+.cat-btn.active{
+  background:var(--gold);border-color:var(--gold);
+  color:#000;font-weight:700;
+}
 
-/* ━━ MAIN ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-main{padding:20px 16px}
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   MAIN
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+main{padding:28px 20px 0}
 
-.cat-section{margin-bottom:36px}
-.cat-title{
-  font-family:'Cormorant Garamond',serif;
-  font-size:22px;font-weight:700;color:var(--cream);
-  margin-bottom:16px;padding-bottom:10px;
+.cat-section{margin-bottom:44px}
+
+.section-header{
+  display:flex;align-items:baseline;gap:12px;
+  margin-bottom:20px;padding-bottom:12px;
   border-bottom:1px solid var(--border);
 }
+.section-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.8rem;font-weight:700;color:var(--cream);
+}
+.section-count{font-size:11px;color:var(--muted);letter-spacing:1px}
 
-/* ━━ ÜRÜN KARTI ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ÜRÜN KARTI — Luxury Edition
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 .product-card{
+  position:relative;
   background:var(--bg2);
   border:1px solid var(--border);
-  border-radius:16px;
-  margin-bottom:12px;
+  border-radius:20px;
+  margin-bottom:14px;
   overflow:hidden;
-  transition:border-color .2s;
+  transition:border-color .3s,transform .2s;
 }
-.product-card:active{border-color:rgba(200,147,58,.3)}
+.product-card::before{
+  content:'';
+  position:absolute;top:0;left:0;right:0;height:1px;
+  background:linear-gradient(90deg,transparent,rgba(200,147,58,.3),transparent);
+  opacity:0;transition:opacity .3s;
+}
+.product-card:active{transform:scale(.99);border-color:var(--border2)}
+.product-card:active::before{opacity:1}
 
-.card-main{display:flex;gap:14px;padding:16px}
+/* Has 3D badge */
+.has-3d-badge{
+  position:absolute;top:14px;right:14px;z-index:2;
+  background:rgba(200,147,58,.15);
+  border:1px solid var(--border2);
+  border-radius:20px;padding:3px 9px;
+  font-size:9px;letter-spacing:1.5px;text-transform:uppercase;
+  color:var(--gold);font-weight:700;
+}
 
-.card-img{
-  width:90px;height:90px;border-radius:12px;
-  background:var(--bg3);flex-shrink:0;
+.card-top{display:flex;gap:0;min-height:110px}
+
+/* Emoji / görsel sol panel */
+.card-visual{
+  width:110px;flex-shrink:0;
+  background:var(--bg3);
   display:flex;align-items:center;justify-content:center;
-  font-size:36px;overflow:hidden;position:relative;
+  font-size:48px;
+  border-right:1px solid var(--border);
+  position:relative;overflow:hidden;
 }
-.card-img img{width:100%;height:100%;object-fit:cover;border-radius:12px}
+.card-visual::after{
+  content:'';
+  position:absolute;inset:0;
+  background:radial-gradient(circle at center,rgba(200,147,58,.06),transparent 70%);
+}
 
-.card-info{flex:1;min-width:0}
-.card-name{font-size:15px;font-weight:700;color:var(--cream);margin-bottom:4px;line-height:1.3}
-.card-desc{font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:8px;
-  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
-.card-price{font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;color:var(--gold)}
+.card-body{
+  flex:1;padding:16px;display:flex;flex-direction:column;justify-content:space-between;
+}
+.card-name{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.2rem;font-weight:700;color:var(--cream);
+  margin-bottom:4px;line-height:1.2;
+}
+.card-desc{
+  font-size:11px;color:var(--muted);line-height:1.6;margin-bottom:10px;
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+}
+.card-price{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.5rem;font-weight:700;color:var(--gold);
+}
 
-/* Aksiyon butonları */
-.card-actions{display:flex;gap:8px;padding:0 16px 14px}
+/* Divider */
+.card-divider{height:1px;background:var(--border);margin:0}
+
+/* Aksiyon satırı */
+.card-actions{display:flex}
 .act-btn{
-  flex:1;padding:9px 8px;border-radius:10px;border:none;
-  font-size:12px;font-weight:700;letter-spacing:.3px;
-  cursor:pointer;transition:all .15s;font-family:'Syne',sans-serif;
-  display:flex;align-items:center;justify-content:center;gap:5px;
+  flex:1;padding:12px 8px;
+  background:transparent;border:none;
+  font-size:11px;font-weight:700;letter-spacing:.8px;
+  cursor:pointer;transition:background .15s;
+  font-family:'Syne',sans-serif;text-transform:uppercase;
+  display:flex;align-items:center;justify-content:center;gap:6px;
 }
-.act-btn.view3d{background:var(--gold);color:#000}
-.act-btn.view3d:active{background:var(--gold2)}
-.act-btn.info{background:rgba(255,255,255,.06);color:var(--cream);border:1px solid var(--border)}
-.act-btn.info:active{background:rgba(255,255,255,.12)}
+.act-btn.view3d{
+  color:var(--gold);
+  border-right:1px solid var(--border);
+}
+.act-btn.view3d:active{background:var(--gold3)}
+.act-btn.view3d.disabled{color:var(--muted);pointer-events:none;opacity:.4}
+.act-btn.info{color:rgba(245,237,224,.6)}
+.act-btn.info:active{background:rgba(255,255,255,.04)}
 
-/* ━━ 3D MODAL ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   3D MODAL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 #modal3d{
-  position:fixed;inset:0;z-index:200;
-  background:rgba(0,0,0,.92);
-  display:none;flex-direction:column;
-  align-items:center;justify-content:flex-start;
-  padding-top:60px;
+  position:fixed;inset:0;z-index:400;
+  background:rgba(5,4,3,.96);
+  display:none;flex-direction:column;align-items:center;
+  padding:0;
+  overflow:hidden;
 }
 #modal3d.show{display:flex}
 
-.modal-close{
-  position:absolute;top:16px;right:16px;
-  width:40px;height:40px;border-radius:50%;
-  background:rgba(255,255,255,.1);border:none;
-  color:#fff;font-size:20px;cursor:pointer;
+.modal-header{
+  width:100%;display:flex;align-items:center;justify-content:space-between;
+  padding:56px 24px 0;
+}
+.modal-brand{font-size:13px;color:var(--muted);letter-spacing:2px;text-transform:uppercase}
+.modal-x{
+  width:38px;height:38px;border-radius:50%;
+  background:rgba(255,255,255,.08);border:none;
+  color:rgba(255,255,255,.7);font-size:18px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
+  transition:background .2s;
 }
-.modal-title{
-  font-family:'Cormorant Garamond',serif;
-  font-size:22px;font-weight:700;color:var(--cream);
-  margin-bottom:4px;text-align:center;padding:0 20px;
+.modal-x:active{background:rgba(255,255,255,.15)}
+
+.modal-stage{
+  flex:1;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;
+  width:100%;padding:0 20px;
 }
-.modal-price{font-size:18px;color:var(--gold);font-weight:700;margin-bottom:20px}
-.modal-hint{font-size:11px;color:var(--muted);margin-top:12px;letter-spacing:1px}
+
+.modal-glow{
+  position:absolute;width:300px;height:300px;border-radius:50%;
+  background:radial-gradient(circle,rgba(200,147,58,.1),transparent 70%);
+  pointer-events:none;
+}
 
 model-viewer{
-  width:min(380px,90vw);
-  height:min(380px,50vh);
+  width:min(360px,85vw);
+  height:min(320px,40vh);
   background:transparent;
   --poster-color:transparent;
+  position:relative;z-index:1;
 }
 
-/* ━━ BİLGİ PANEL (bottom sheet) ━━━━━━━━━━━━━━━━━ */
+.modal-info{
+  text-align:center;padding:0 24px 20px;width:100%;
+}
+.modal-pname{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.8rem;font-weight:700;color:var(--cream);margin-bottom:2px;
+}
+.modal-pprice{font-size:1.4rem;color:var(--gold);font-weight:700;margin-bottom:8px;font-family:'Cormorant Garamond',serif}
+.modal-hint{
+  font-size:10px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;
+  display:flex;align-items:center;justify-content:center;gap:12px;
+}
+.modal-hint span::before,.modal-hint span::after{content:'·';margin:0 4px;opacity:.4}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   BİLGİ PANEL
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 #infoPanel{
-  position:fixed;bottom:0;left:0;right:0;z-index:300;
-  background:#0d0b08;
-  border-top:1px solid rgba(200,147,58,.3);
-  border-radius:20px 20px 0 0;
-  padding:16px 22px 44px;
+  position:fixed;bottom:0;left:0;right:0;z-index:500;
+  background:var(--bg2);
+  border-top:1px solid var(--border2);
+  border-radius:24px 24px 0 0;
+  padding:16px 24px 48px;
   transform:translateY(100%);
-  transition:transform .32s cubic-bezier(.32,.72,0,1);
-  max-height:80vh;overflow-y:auto;
+  transition:transform .35s cubic-bezier(.32,.72,0,1);
+  max-height:82vh;overflow-y:auto;
 }
 #infoPanel.show{transform:translateY(0)}
 
-.ip-handle{width:34px;height:3px;background:rgba(255,255,255,.18);border-radius:2px;margin:0 auto 14px}
-.ip-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
-.ip-title{font-size:17px;font-weight:700;color:var(--cream)}
-.ip-close{width:30px;height:30px;border-radius:50%;background:rgba(255,255,255,.1);border:none;color:rgba(255,255,255,.6);font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-
-.ip-row{display:flex;gap:10px;margin-bottom:12px;align-items:flex-start}
-.ip-label{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--gold);min-width:80px;padding-top:2px;font-weight:700;flex-shrink:0}
-.ip-val{font-size:13px;color:rgba(245,237,224,.8);line-height:1.55;flex:1}
-.ip-badge{display:inline-block;background:rgba(76,175,128,.15);color:#4caf80;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
-.ip-divider{height:1px;background:rgba(255,255,255,.06);margin:14px 0}
-.ip-legal{font-size:10px;color:#444;line-height:1.65}
-
-/* ━━ FOOTER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-.footer-badge{
-  text-align:center;padding:24px 20px;
-  border-top:1px solid var(--border);
-  margin-top:20px;
+/* Overlay */
+#infoBg{
+  position:fixed;inset:0;z-index:499;
+  background:rgba(0,0,0,.5);
+  display:none;backdrop-filter:blur(4px);
 }
-.footer-badge p{font-size:10px;color:#444;letter-spacing:1px;margin-bottom:4px}
-.footer-badge strong{font-size:11px;color:var(--gold);letter-spacing:2px}
+#infoBg.show{display:block}
+
+.ip-handle{width:36px;height:3px;background:rgba(255,255,255,.15);border-radius:2px;margin:0 auto 18px}
+
+.ip-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px}
+.ip-names{}
+.ip-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.4rem;font-weight:700;color:var(--cream);
+  margin-bottom:2px;
+}
+.ip-price{font-size:1.1rem;color:var(--gold);font-weight:700;font-family:'Cormorant Garamond',serif}
+.ip-x{
+  width:32px;height:32px;border-radius:50%;
+  background:rgba(255,255,255,.08);border:none;
+  color:rgba(255,255,255,.5);font-size:15px;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  margin-left:12px;margin-top:2px;
+}
+
+/* Info grid */
+.ip-grid{display:flex;flex-direction:column;gap:14px}
+
+.ip-item{
+  display:flex;gap:14px;align-items:flex-start;
+  padding:14px;border-radius:14px;
+  background:var(--bg3);
+  border:1px solid var(--border);
+}
+.ip-icon{font-size:18px;flex-shrink:0;margin-top:1px}
+.ip-content{}
+.ip-label{font-size:9px;letter-spacing:2px;text-transform:uppercase;color:var(--gold);font-weight:700;margin-bottom:3px}
+.ip-val{font-size:13px;color:rgba(245,237,224,.8);line-height:1.55}
+
+.ip-badge{
+  display:inline-flex;align-items:center;gap:4px;
+  background:rgba(76,175,128,.12);color:#4caf80;
+  font-size:11px;font-weight:700;
+  padding:4px 12px;border-radius:20px;
+  border:1px solid rgba(76,175,128,.2);
+}
+
+.ip-legal-box{
+  margin-top:18px;padding:14px;border-radius:14px;
+  background:rgba(200,147,58,.04);
+  border:1px solid rgba(200,147,58,.1);
+}
+.ip-legal{font-size:10px;color:#555;line-height:1.7}
+.ip-legal strong{color:var(--muted)}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   FOOTER
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+.footer{
+  text-align:center;padding:32px 24px;
+  border-top:1px solid var(--border);
+  margin-top:12px;
+}
+.footer-logo{
+  font-family:'Cormorant Garamond',serif;
+  font-size:1.3rem;font-weight:700;color:var(--gold);
+  letter-spacing:3px;margin-bottom:6px;
+}
+.footer-txt{font-size:10px;color:#444;letter-spacing:1px;line-height:1.8}
+
+/* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+   ANIMATIONS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+@keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+.product-card{animation:fadeUp .4s ease both}
+.product-card:nth-child(1){animation-delay:.05s}
+.product-card:nth-child(2){animation-delay:.10s}
+.product-card:nth-child(3){animation-delay:.15s}
+.product-card:nth-child(4){animation-delay:.20s}
 </style>
 </head>
 <body>
 
-<!-- ━━ HEADER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
-<header>
-  <div class="h-top">
-    <div class="h-logo">AR<span>Menü</span></div>
-    <div class="h-badge">🍕 Demo Restoran</div>
+<!-- ━━ HERO ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div class="hero">
+  <div class="hero-eyebrow">Dijital Menü</div>
+  <h1 class="hero-name">Demo<br><em>Restoran</em></h1>
+  <p class="hero-sub">Antalya · Since 2019</p>
+  <div class="hero-stats">
+    <div class="stat">
+      <div class="stat-num">3D</div>
+      <div class="stat-label">Model</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">24</div>
+      <div class="stat-label">Ürün</div>
+    </div>
+    <div class="stat">
+      <div class="stat-num">⚖️</div>
+      <div class="stat-label">Mevzuat</div>
+    </div>
   </div>
+</div>
+
+<!-- ━━ STICKY NAV ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<nav class="sticky-nav">
   <div class="cats" id="cats">
     <button class="cat-btn active" data-cat="pizza">Pizza</button>
     <button class="cat-btn" data-cat="burger">Burger</button>
     <button class="cat-btn" data-cat="icecek">İçecek</button>
     <button class="cat-btn" data-cat="tatli">Tatlı</button>
   </div>
-</header>
+</nav>
 
 <!-- ━━ MAIN ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
 <main id="main"></main>
 
-<div class="footer-badge">
-  <p>⚖️ Türk Gıda Kodeksi kapsamında zorunlu bilgilendirme</p>
-  <strong>AR MENÜ · DİJİTAL MENÜ SİSTEMİ</strong>
+<div class="footer">
+  <div class="footer-logo">AR MENÜ</div>
+  <div class="footer-txt">
+    ⚖️ Türk Gıda Kodeksi Gıda Etiketleme ve Tüketicileri Bilgilendirme<br>
+    Yönetmeliği kapsamında zorunlu bilgilendirme sunulmaktadır.<br>
+    Tarım ve Orman Bakanlığı tebliği — 2026
+  </div>
 </div>
 
 <!-- ━━ 3D MODAL ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
 <div id="modal3d">
-  <button class="modal-close" id="close3d">✕</button>
-  <div class="modal-title" id="modal3dTitle">Pizza</div>
-  <div class="modal-price" id="modal3dPrice">₺289</div>
-  <model-viewer
-    id="modelViewer"
-    src=""
-    alt="3D model"
-    auto-rotate
-    camera-controls
-    shadow-intensity="0.5"
-    exposure="1.2"
-    loading="lazy"
-  ></model-viewer>
-  <div class="modal-hint">↔ Döndür &nbsp;·&nbsp; ⟲ Yakınlaştır &nbsp;·&nbsp; ↕ Eğ</div>
+  <div class="modal-header">
+    <div class="modal-brand">AR Menü · 3D Görünüm</div>
+    <button class="modal-x" id="close3d">✕</button>
+  </div>
+  <div class="modal-stage">
+    <div class="modal-glow"></div>
+    <model-viewer id="modelViewer"
+      alt="3D model"
+      auto-rotate
+      camera-controls
+      shadow-intensity="0.5"
+      exposure="1.2"
+      ar
+      ar-modes="webxr scene-viewer quick-look">
+      <!-- Loading göstergesi -->
+      <div slot="progress-bar" style="display:none"></div>
+      <div id="mvLoading" slot="poster" style="
+        width:100%;height:100%;display:flex;flex-direction:column;
+        align-items:center;justify-content:center;gap:14px;
+        background:transparent;
+      ">
+        <div style="
+          width:40px;height:40px;border-radius:50%;
+          border:3px solid rgba(200,147,58,.2);
+          border-top-color:#c8933a;
+          animation:spin .8s linear infinite;
+        "></div>
+        <div style="font-size:11px;color:#888;letter-spacing:2px;text-transform:uppercase">Yükleniyor</div>
+      </div>
+    </model-viewer>
+    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
+  </div>
+  <div class="modal-info">
+    <div class="modal-pname" id="modal3dName"></div>
+    <div class="modal-pprice" id="modal3dPrice"></div>
+    <div class="modal-hint">
+      <span>Döndür</span>
+      <span>Yakınlaştır</span>
+      <span>Eğ</span>
+    </div>
+  </div>
 </div>
 
 <!-- ━━ BİLGİ PANELİ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ -->
+<div id="infoBg"></div>
 <div id="infoPanel">
   <div class="ip-handle"></div>
   <div class="ip-header">
-    <div class="ip-title" id="ipTitle"></div>
-    <button class="ip-close" id="ipClose">✕</button>
+    <div class="ip-names">
+      <div class="ip-title" id="ipTitle"></div>
+      <div class="ip-price" id="ipPrice"></div>
+    </div>
+    <button class="ip-x" id="ipClose">✕</button>
   </div>
-  <div class="ip-row"><div class="ip-label">Kalori</div><div class="ip-val" id="ipKalori"></div></div>
-  <div class="ip-row"><div class="ip-label">İçerik</div><div class="ip-val" id="ipIcerik"></div></div>
-  <div class="ip-row"><div class="ip-label">Alerjen</div><div class="ip-val" id="ipAlerjen"></div></div>
-  <div class="ip-row">
-    <div class="ip-label">Domuz/Alkol</div>
-    <div class="ip-val"><span class="ip-badge" id="ipDomuz"></span></div>
+  <div class="ip-grid">
+    <div class="ip-item">
+      <div class="ip-icon">🔥</div>
+      <div class="ip-content">
+        <div class="ip-label">Kalori</div>
+        <div class="ip-val" id="ipKalori"></div>
+      </div>
+    </div>
+    <div class="ip-item">
+      <div class="ip-icon">🥗</div>
+      <div class="ip-content">
+        <div class="ip-label">İçerik</div>
+        <div class="ip-val" id="ipIcerik"></div>
+      </div>
+    </div>
+    <div class="ip-item">
+      <div class="ip-icon">⚠️</div>
+      <div class="ip-content">
+        <div class="ip-label">Alerjenler</div>
+        <div class="ip-val" id="ipAlerjen"></div>
+      </div>
+    </div>
+    <div class="ip-item">
+      <div class="ip-icon">✅</div>
+      <div class="ip-content">
+        <div class="ip-label">Domuz / Alkol</div>
+        <div class="ip-val"><span class="ip-badge" id="ipDomuz"></span></div>
+      </div>
+    </div>
   </div>
-  <div class="ip-divider"></div>
-  <div class="ip-legal">⚖️ Türk Gıda Kodeksi Gıda Etiketleme ve Tüketicileri Bilgilendirme Yönetmeliği kapsamında sunulmaktadır. Tarım ve Orman Bakanlığı tebliği gereğince zorunlu bilgilendirme.</div>
+  <div class="ip-legal-box">
+    <div class="ip-legal"><strong>⚖️ Yasal Bilgilendirme</strong><br>Bu bilgiler Türk Gıda Kodeksi Gıda Etiketleme ve Tüketicileri Bilgilendirme Yönetmeliği kapsamında Tarım ve Orman Bakanlığı tebliği gereğince zorunlu olarak sunulmaktadır.</div>
+  </div>
 </div>
 
 <script>
 /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
    MENÜ VERİSİ
-   Gerçek restorana göre burası değiştirilir.
-   glb: GitHub Pages'deki model URL'si (yoksa null — emoji gösterilir)
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
 const MENU = {
-  pizza: {
-    title: 'Pizzalar',
-    items: [
-      {
-        id:'p1', name:'Brokoli Pizza', emoji:'🥦🍕', price:'₺289',
-        desc:'Taze brokoli, sarımsak, mozzarella, zeytinyağı, ince hamur',
-        glb:'https://farfromuk.github.io/sofra-ar/pizza.glb',
-        kalori:'680 kcal', icerik:'Un, domates sosu, mozzarella, brokoli, sarımsak, zeytinyağı',
-        alerjen:'Glüten, Süt ürünleri', domuz:'İçermez'
-      },
-      {
-        id:'p2', name:'Pepperoni Pizza', emoji:'🍕', price:'₺319',
-        desc:'Bol pepperoni, mozzarella, domates sosu, taze fesleğen',
-        glb:'https://farfromuk.github.io/sofra-ar/burger.glb',
-        kalori:'820 kcal', icerik:'Un, domates sosu, mozzarella, pepperoni, biber, zeytinyağı',
-        alerjen:'Glüten, Süt ürünleri', domuz:'İçermez'
-      },
-      {
-        id:'p3', name:'Margarita Pizza', emoji:'🍅🍕', price:'₺269',
-        desc:'San Marzano domates, buffalo mozzarella, taze fesleğen',
-        glb:'https://farfromuk.github.io/sofra-ar/sushi.glb',
-        kalori:'620 kcal', icerik:'Un, domates sosu, mozzarella, taze fesleğen, zeytinyağı',
-        alerjen:'Glüten, Süt ürünleri', domuz:'İçermez'
-      }
+  pizza:{
+    title:'Pizzalar',
+    items:[
+      {id:'p1',name:'Brokoli Pizza',emoji:'🥦',price:'₺289',
+       desc:'Taze brokoli, sarımsak, mozzarella, zeytinyağı, ince hamur',
+       glb:'https://farfromuk.github.io/sofra-ar/pizza.glb',
+       kalori:'680 kcal',icerik:'Un, domates sosu, mozzarella, brokoli, sarımsak, zeytinyağı',
+       alerjen:'Glüten, Süt ürünleri',domuz:'İçermez'},
+      {id:'p2',name:'Pepperoni Pizza',emoji:'🍕',price:'₺319',
+       desc:'Bol pepperoni, mozzarella, domates sosu, taze fesleğen',
+       glb:'https://farfromuk.github.io/sofra-ar/burger.glb',
+       kalori:'820 kcal',icerik:'Un, domates sosu, mozzarella, pepperoni, biber, zeytinyağı',
+       alerjen:'Glüten, Süt ürünleri',domuz:'İçermez'},
+      {id:'p3',name:'Margarita Pizza',emoji:'🍅',price:'₺269',
+       desc:'San Marzano domates, buffalo mozzarella, taze fesleğen',
+       glb:'https://farfromuk.github.io/sofra-ar/sushi.glb',
+       kalori:'620 kcal',icerik:'Un, domates sosu, mozzarella, taze fesleğen, zeytinyağı',
+       alerjen:'Glüten, Süt ürünleri',domuz:'İçermez'},
     ]
   },
-  burger: {
-    title: 'Burgerler',
-    items: [
-      {
-        id:'b1', name:'Klasik Burger', emoji:'🍔', price:'₺219',
-        desc:'Dana eti, cheddar, domates, marul, özel sos, brioche ekmek',
-        glb:null,
-        kalori:'750 kcal', icerik:'Dana eti, cheddar, domates, marul, turşu, brioche ekmek, sos',
-        alerjen:'Glüten, Süt ürünleri, Yumurta', domuz:'İçermez'
-      },
-      {
-        id:'b2', name:'Crispy Chicken', emoji:'🍗', price:'₺199',
-        desc:'Çıtır tavuk, coleslaw, jalapeno, ranch sos',
-        glb:null,
-        kalori:'680 kcal', icerik:'Tavuk eti, un, yumurta, lahana, biber, ranch sos, ekmek',
-        alerjen:'Glüten, Yumurta, Süt ürünleri', domuz:'İçermez'
-      }
+  burger:{
+    title:'Burgerler',
+    items:[
+      {id:'b1',name:'Klasik Burger',emoji:'🍔',price:'₺219',
+       desc:'Dana eti, cheddar, domates, marul, özel sos, brioche ekmek',
+       glb:null,
+       kalori:'750 kcal',icerik:'Dana eti, cheddar, domates, marul, turşu, brioche ekmek',
+       alerjen:'Glüten, Süt ürünleri, Yumurta',domuz:'İçermez'},
+      {id:'b2',name:'Crispy Chicken',emoji:'🍗',price:'₺199',
+       desc:'Çıtır tavuk, coleslaw, jalapeño, ranch sos',
+       glb:null,
+       kalori:'680 kcal',icerik:'Tavuk eti, un, yumurta, lahana, biber, ranch sos',
+       alerjen:'Glüten, Yumurta, Süt ürünleri',domuz:'İçermez'},
     ]
   },
-  icecek: {
-    title: 'İçecekler',
-    items: [
-      {
-        id:'i1', name:'Limonata', emoji:'🍋', price:'₺69',
-        desc:'Taze sıkılmış limon, nane, soda',
-        glb:null,
-        kalori:'95 kcal', icerik:'Limon, şeker, nane, soda suyu',
-        alerjen:'Yok', domuz:'İçermez'
-      },
-      {
-        id:'i2', name:'Türk Çayı', emoji:'🍵', price:'₺29',
-        desc:'Rize çayı, demlik usulü',
-        glb:null,
-        kalori:'2 kcal', icerik:'Çay',
-        alerjen:'Yok', domuz:'İçermez'
-      }
+  icecek:{
+    title:'İçecekler',
+    items:[
+      {id:'i1',name:'Taze Limonata',emoji:'🍋',price:'₺69',
+       desc:'Taze sıkılmış limon, nane, doğal soda',
+       glb:null,
+       kalori:'95 kcal',icerik:'Limon, şeker, nane, soda suyu',
+       alerjen:'Yok',domuz:'İçermez'},
+      {id:'i2',name:'Türk Çayı',emoji:'🫖',price:'₺29',
+       desc:'Rize çayı, demlik usulü geleneksel demleme',
+       glb:null,
+       kalori:'2 kcal',icerik:'Çay',
+       alerjen:'Yok',domuz:'İçermez'},
     ]
   },
-  tatli: {
-    title: 'Tatlılar',
-    items: [
-      {
-        id:'t1', name:'Tiramisu', emoji:'🍰', price:'₺119',
-        desc:'Mascarpone, espresso, kakao, ladyfinger bisküvi',
-        glb:null,
-        kalori:'420 kcal', icerik:'Mascarpone, yumurta, şeker, kahve, bisküvi, kakao',
-        alerjen:'Glüten, Yumurta, Süt ürünleri', domuz:'İçermez'
-      }
+  tatli:{
+    title:'Tatlılar',
+    items:[
+      {id:'t1',name:'Tiramisu',emoji:'🍰',price:'₺119',
+       desc:'Mascarpone, espresso, kakao, ladyfinger bisküvi',
+       glb:null,
+       kalori:'420 kcal',icerik:'Mascarpone, yumurta, şeker, kahve, bisküvi, kakao',
+       alerjen:'Glüten, Yumurta, Süt ürünleri',domuz:'İçermez'},
     ]
   }
 };
 
-/* ━━ RENDER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-const main = document.getElementById('main');
+/* ━━ RENDER ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+const mainEl = document.getElementById('main');
 
-function renderAll() {
-  main.innerHTML = '';
-  Object.entries(MENU).forEach(([key, cat]) => {
-    const sec = document.createElement('section');
-    sec.className = 'cat-section';
-    sec.id = 'cat-' + key;
-    sec.innerHTML = `<div class="cat-title">${cat.title}</div>`;
-    cat.items.forEach(item => {
-      const card = document.createElement('div');
-      card.className = 'product-card';
-      card.innerHTML = `
-        <div class="card-main">
-          <div class="card-img">${item.emoji}</div>
-          <div class="card-info">
-            <div class="card-name">${item.name}</div>
-            <div class="card-desc">${item.desc}</div>
+function render(){
+  mainEl.innerHTML='';
+  Object.entries(MENU).forEach(([key,cat])=>{
+    const sec=document.createElement('section');
+    sec.className='cat-section';
+    sec.id='cat-'+key;
+    const total=cat.items.length;
+    sec.innerHTML=`
+      <div class="section-header">
+        <div class="section-title">${cat.title}</div>
+        <div class="section-count">${total} ürün</div>
+      </div>`;
+    cat.items.forEach(item=>{
+      const card=document.createElement('div');
+      card.className='product-card';
+      card.innerHTML=`
+        ${item.glb?'<div class="has-3d-badge">3D</div>':''}
+        <div class="card-top">
+          <div class="card-visual">${item.emoji}</div>
+          <div class="card-body">
+            <div>
+              <div class="card-name">${item.name}</div>
+              <div class="card-desc">${item.desc}</div>
+            </div>
             <div class="card-price">${item.price}</div>
           </div>
         </div>
+        <div class="card-divider"></div>
         <div class="card-actions">
-          ${item.glb
-            ? `<button class="act-btn view3d" data-id="${item.id}">🔄 3D Gör</button>`
-            : `<button class="act-btn view3d" style="opacity:.35;pointer-events:none">🔄 3D Yakında</button>`
-          }
-          <button class="act-btn info" data-id="${item.id}">📋 Besin Bilgisi</button>
+          <button class="act-btn view3d${item.glb?'':' disabled'}" data-id="${item.id}">
+            ${item.glb?'⟳ &nbsp;3D Görüntüle':'⟳ &nbsp;3D Yakında'}
+          </button>
+          <button class="act-btn info" data-id="${item.id}">📋 &nbsp;Besin Bilgisi</button>
         </div>`;
       sec.appendChild(card);
     });
-    main.appendChild(sec);
+    mainEl.appendChild(sec);
   });
 }
-
-renderAll();
+render();
 
 /* ━━ KATEGORİ NAV ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-document.getElementById('cats').addEventListener('click', e => {
-  const btn = e.target.closest('.cat-btn');
-  if (!btn) return;
-  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+document.getElementById('cats').addEventListener('click',e=>{
+  const btn=e.target.closest('.cat-btn');
+  if(!btn) return;
+  document.querySelectorAll('.cat-btn').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  const sec = document.getElementById('cat-' + btn.dataset.cat);
-  if (sec) sec.scrollIntoView({ behavior:'smooth', block:'start' });
+  const sec=document.getElementById('cat-'+btn.dataset.cat);
+  if(sec) sec.scrollIntoView({behavior:'smooth',block:'start'});
 });
 
-/* ━━ TÜKÜM veri bul ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-function findItem(id) {
-  for (const cat of Object.values(MENU))
-    for (const item of cat.items)
-      if (item.id === id) return item;
-  return null;
+/* ━━ ITEM LOOKUP ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+function find(id){
+  for(const cat of Object.values(MENU))
+    for(const item of cat.items)
+      if(item.id===id) return item;
 }
 
 /* ━━ 3D MODAL ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-const modal3d    = document.getElementById('modal3d');
-const modelViewer= document.getElementById('modelViewer');
-const close3d    = document.getElementById('close3d');
+const modal3d=document.getElementById('modal3d');
+const mv=document.getElementById('modelViewer');
 
-function open3d(item) {
-  document.getElementById('modal3dTitle').textContent = item.name;
-  document.getElementById('modal3dPrice').textContent = item.price;
-  modelViewer.setAttribute('src', item.glb);
+function open3d(item){
+  document.getElementById('modal3dName').textContent=item.name;
+  document.getElementById('modal3dPrice').textContent=item.price;
   modal3d.classList.add('show');
+  document.body.style.overflow='hidden';
+
+  // Model-viewer hazır olunca src'yi set et
+  (window.modelViewerReady||Promise.resolve()).then(()=>{
+    // Önce sıfırla, sonra yeni src ver — tarayıcı yeniden yükler
+    mv.removeAttribute('src');
+    requestAnimationFrame(()=>{
+      mv.setAttribute('src', item.glb);
+    });
+  });
 }
-close3d.addEventListener('click', () => {
+document.getElementById('close3d').addEventListener('click',()=>{
   modal3d.classList.remove('show');
-  modelViewer.setAttribute('src','');
+  mv.setAttribute('src','');
+  document.body.style.overflow='';
 });
 
 /* ━━ BİLGİ PANELİ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-const infoPanel = document.getElementById('infoPanel');
-const ipClose   = document.getElementById('ipClose');
+const infoPanel=document.getElementById('infoPanel');
+const infoBg=document.getElementById('infoBg');
 
-function openInfo(item) {
-  document.getElementById('ipTitle').textContent   = item.name;
-  document.getElementById('ipKalori').textContent  = item.kalori;
-  document.getElementById('ipIcerik').textContent  = item.icerik;
-  document.getElementById('ipAlerjen').textContent = item.alerjen;
-  document.getElementById('ipDomuz').textContent   = '✓ ' + item.domuz;
+function openInfo(item){
+  document.getElementById('ipTitle').textContent=item.name;
+  document.getElementById('ipPrice').textContent=item.price;
+  document.getElementById('ipKalori').textContent=item.kalori;
+  document.getElementById('ipIcerik').textContent=item.icerik;
+  document.getElementById('ipAlerjen').textContent=item.alerjen;
+  document.getElementById('ipDomuz').textContent='✓ '+item.domuz;
   infoPanel.classList.add('show');
+  infoBg.classList.add('show');
 }
-ipClose.addEventListener('click', () => infoPanel.classList.remove('show'));
+function closeInfo(){
+  infoPanel.classList.remove('show');
+  infoBg.classList.remove('show');
+}
+document.getElementById('ipClose').addEventListener('click',closeInfo);
+infoBg.addEventListener('click',closeInfo);
 
-/* ━━ BUTON DELEGASYONU ━━━━━━━━━━━━━━━━━━━━━━━━━━ */
-main.addEventListener('click', e => {
-  const btn = e.target.closest('.act-btn');
-  if (!btn) return;
-  const item = findItem(btn.dataset.id);
-  if (!item) return;
-  if (btn.classList.contains('view3d')) open3d(item);
-  if (btn.classList.contains('info'))   openInfo(item);
+/* ━━ DELEGASYON ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+mainEl.addEventListener('click',e=>{
+  const btn=e.target.closest('.act-btn');
+  if(!btn||btn.classList.contains('disabled')) return;
+  const item=find(btn.dataset.id);
+  if(!item) return;
+  if(btn.classList.contains('view3d')) open3d(item);
+  if(btn.classList.contains('info'))   openInfo(item);
 });
 </script>
 </body>
